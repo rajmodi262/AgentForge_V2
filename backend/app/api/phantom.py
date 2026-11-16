@@ -25,6 +25,13 @@ from app.phantom.score import LAYERS
 router = APIRouter(prefix="/phantom", tags=["Phantom Hunter"])
 
 
+def _uuid(v):
+    try:
+        return UUID(str(v))
+    except (ValueError, TypeError):
+        return None
+
+
 def _project_row(p: PhProject) -> dict:
     return {
         "id": str(p.id), "name": p.name, "developer": p.developer, "city": p.city, "state": p.state, "country": p.country,
@@ -35,6 +42,8 @@ def _project_row(p: PhProject) -> dict:
         "weakest_assumption": p.weakest_assumption, "n_sources": p.n_sources,
         "call_segments": p.call_segments, "has_debate": bool(p.debate),
         "last_seen": p.last_seen.isoformat() if p.last_seen else None,
+        "grid_position": (p.power or {}).get("grid_position", "NO_EVIDENCE"), "grid_label": (p.power or {}).get("grid_label"),
+        "power": {k: v for k, v in (p.power or {}).items() if k != "facts"},
     }
 
 
@@ -104,6 +113,31 @@ def who_to_call(segment: str = Query("power", pattern="^(power|electrical|coolin
     return {"segment": segment, "projects": rows[:limit]}
 
 
+@router.get("/power")
+def power(country: Optional[str] = None, db: Session = Depends(get_db)):
+    """Power forensics for the portfolio: grid position (secured vs unsecured), on-site generation,
+    cooling and procurement signals — plus the projects behind each number."""
+    from app.phantom import power as P
+    q = db.query(PhProject)
+    if country:
+        q = q.filter(PhProject.country == country)
+    ps = q.all()
+    head = P.headline([{"capacity_mw": p.capacity_mw, "stage": p.stage, "power": p.power} for p in ps])
+    rows = sorted((_project_row(p) for p in ps), key=lambda r: -(r["capacity_mw"] or 0))
+    by_pos = {k: [r for r in rows if r["grid_position"] == k][:25] for k in P.GRID_POSITIONS}
+    return {"headline": head, "labels": P.GRID_LABEL, "secured_positions": sorted(P.SECURED), "projects_by_position": by_pos,
+            "note": "NO_EVIDENCE means nothing was found in public sources — not proof that no agreement exists."}
+
+
+@router.get("/developers")
+def developers(min_projects: int = Query(1, ge=1), limit: int = Query(50, le=300), db: Session = Depends(get_db)):
+    """Track record per developer: how much of what they announced reached construction, and how fast."""
+    from app.phantom.track import JUDGE_AFTER_MONTHS, MIN_JUDGED, from_db
+    rows = [r for r in from_db(db) if r["projects"] >= min_projects]
+    return {"developers": rows[:limit], "total": len(rows),
+            "note": f"build_rate counts only projects first seen {JUDGE_AFTER_MONTHS}+ months ago and needs {MIN_JUDGED}+ of them."}
+
+
 @router.get("/signals")
 def signals(limit: int = Query(15, le=50), db: Session = Depends(get_db)):
     """Latest verified evidence across all projects — the 'what changed' feed."""
@@ -148,6 +182,7 @@ def project_detail(project_id: UUID, db: Session = Depends(get_db)):
     return {
         **_project_row(p),
         "score_breakdown": p.score_breakdown, "debate": p.debate,
+        "power_facts": [{**f, "article": art(_uuid(f.get("article_id")))} for f in (p.power or {}).get("facts", [])],
         "evidence": evidence,
         "anomalies": [{"kind": a.kind, "severity": a.severity, "message": a.message, "details": a.details} for a in p.anomalies],
         "mentions": [{"article": art(m.article_id), "verified_ratio": m.verified_ratio, "verification": m.verification, "data": m.data}

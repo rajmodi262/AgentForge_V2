@@ -110,3 +110,11 @@ def _no_live_web_search(monkeypatch):
     async def _offline(query, count):
         return []
     monkeypatch.setattr(web_search_module, "_wikipedia_search", _offline)
+
+
+@pytest.fixture(autouse=True)
+def _stated_priors(monkeypatch):
+    """Tests pin the scorer to its stated priors, whatever calibration.json currently holds."""
+    from app.phantom import score as S
+    monkeypatch.setattr(S, "PRIOR", dict(S.PRIOR_ASSUMED))
+    monkeypatch.setattr(S, "CALIBRATION", None)

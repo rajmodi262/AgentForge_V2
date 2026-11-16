@@ -108,6 +108,19 @@ def analyse(data: Dict[str, List[Dict[str, Any]]]) -> Dict[str, Any]:
     f["open_power"] = [p for p in P if not p["power_partner"] and p["stage"] <= 3 and p["reality_score"] >= 0.45 and (p["capacity_mw"] or 0) >= 50]
     f["open_power_mw"] = sum(p["reality_mw"] or 0 for p in f["open_power"])
     f["anomalies"] = Counter(a["kind"] for a in data["anomalies"])
+
+    # power forensics (same numbers as GET /phantom/power)
+    from app.phantom import power as PW
+    split = lambda v: [x for x in (v or "").split("; ") if x]  # noqa: E731
+    f["power"] = PW.headline([{"capacity_mw": p["capacity_mw"], "stage": p["stage"], "power": {
+        "grid_position": p.get("grid_position"), "utilities": split(p.get("utilities")), "onsite": split(p.get("onsite_generation")),
+        "renewable": split(p.get("renewable_procurement")), "cooling": split(p.get("cooling_tech")), "grid_kv": p.get("grid_kv"),
+        "grid_mva": p.get("grid_mva"), "substation": p.get("substation"), "rack_kw": p.get("rack_kw"), "pue": p.get("pue"),
+        "contractors": split(p.get("contractors")), "financiers": split(p.get("financiers")),
+        "n_facts": sum(1 for x in data.get("power_facts", []) if x["project_id"] == p["project_id"])}} for p in P])
+    f["power_labels"] = PW.GRID_LABEL
+    f["agreements"] = sorted((p for p in P if p.get("grid_position") == "AGREEMENT"), key=lambda p: -(p["capacity_mw"] or 0))
+    f["developers"] = data.get("developers", [])
     return f
 
 
@@ -153,6 +166,20 @@ def charts(f: Dict[str, Any]) -> Dict[str, str]:
         ax.text(i, f["coverage"][k][1] * 100 + 1, f"n={f['coverage'][k][0]}", ha="center", fontsize=9)
     _style(ax, "Average reality score by number of independent sources", "Sources", "Avg reality score %")
     out["coverage"] = _save(fig, "04_score_vs_sources")
+
+    # 6. grid position
+    if f.get("power"):
+        from app.phantom.power import GRID_POSITIONS
+        fig, ax = plt.subplots(figsize=(8, 3.8))
+        g = f["power"]["grid"]
+        colours = {"ENERGIZED": GREEN, "AGREEMENT": CYAN, "POWER_DEAL": VIOLET, "UNDER_CONSTRUCTION": AMBER, "APPLIED": AMBER, "NO_EVIDENCE": RED}
+        ks = [k for k in GRID_POSITIONS if g[k]["projects"]][::-1]
+        ax.barh([f["power_labels"][k] for k in ks], [g[k]["mw"] / 1000 for k in ks], color=[colours[k] for k in ks], alpha=0.85)
+        for i, k in enumerate(ks):
+            ax.text(g[k]["mw"] / 1000, i, f"  {g[k]['projects']} projects", va="center", fontsize=9)
+        _style(ax, "Grid position: how much capacity has power secured?", xlabel="Announced GW")
+        ax.grid(axis="x", alpha=0.25)
+        out["grid"] = _save(fig, "06_grid_position")
 
     # 5. momentum
     if f["quarters"]:
@@ -205,20 +232,84 @@ def report(f: Dict[str, Any], imgs: Dict[str, str]) -> str:
                  "(the latest quarter may still be partial).")
     L.append(f"8. **Sales opportunity.** {len(f['open_power'])} projects are likely enough (≥45%), at least 50 MW, pre-construction and have **no power partner named** — "
              f"{gw(f['open_power_mw'])} of reality-weighted demand an IPP could still bid for.")
+    L += power_section(f) + developer_section(f)
     L += ["", "## Charts", ""]
     caps = {"ladder": "Capacity by evidence stage", "states": "Phantom gap by region", "developers": "Developers: announced vs real",
-            "coverage": "Reality score vs number of sources", "momentum": "Evidence momentum"}
+            "coverage": "Reality score vs number of sources", "momentum": "Evidence momentum", "grid": "Grid position"}
     for k, path in imgs.items():
         L += [f"### {caps[k]}", "", f"![{caps[k]}]({path})", ""]
     L += ["## Score distribution", "", "| Band | Projects |", "|---|---|"]
     L += [f"| {b} | {n} |" for b, n in sorted(f["bands"].items())]
     L += ["", f"Median reality score: {f['median_score']:.0%}.", "",
           "## Caveats", "",
-          "- Reality scores are **stated priors + named adjustments**, not yet calibrated against outcomes (see `PHANTOM_HUNTER.md` §4.4).",
-          "- Coverage reflects what public news reports; projects that never make the news are invisible (recall is not measured).",
-          "- A few projects may appear twice when the resolver was not confident enough to merge them (by design).",
+          "- **Calibration.** The layer priors are fitted from a backtest and cross-validated (`PHANTOM_EVAL.md` §6). It validates the score as a "
+          "filter for phantom projects; it does not yet show the score can pick winners before construction starts.",
+          "- **Recall.** Against 42 sites from four published lists the pipeline finds most large projects (`PHANTOM_EVAL.md` §5); "
+          "small projects that never make the news are still invisible.",
+          "- **Power facts are what public sources say.** *No public evidence* is not proof that a project has no power agreement — "
+          "supply agreements are often never announced. Filings are the next source to add.",
+          "- A few projects may appear twice when the resolver was not confident enough to merge them (by design), so announced GW is an upper bound.",
           ""]
     return "\n".join(L)
+
+
+def power_section(f: Dict[str, Any]) -> List[str]:
+    h = f.get("power")
+    if not h:
+        return []
+    g, lab = h["grid"], f["power_labels"]
+    pct = lambda x: "—" if x is None else f"{x:.0%}"  # noqa: E731
+    rows = [f"| {lab[k]} | {g[k]['projects']} | {gw(g[k]['mw'])} | {pct(g[k]['mw'] / h['announced_mw'] if h['announced_mw'] else None)} |"
+            for k in g if g[k]["projects"]]
+    sig = [("Grid agreement signed (pipeline)", h["pipeline_secured"]), ("No utility or power supplier named", h["no_utility_named"]),
+           ("Renewable procurement mentioned (PPA, green tariff, CRESS, open access)", h["renewable_signal"]),
+           ("Liquid cooling (direct-to-chip, immersion, rear-door)", h["liquid_cooling_signal"]),
+           ("On-site / behind-the-meter generation", h["btm_signal"]), ("Low-water or reclaimed-water design", h["low_water_signal"])]
+    cov = h["coverage"]
+    L = ["", "## Power forensics", "",
+         "A data centre is a power project with servers attached. Every project's verified sentences are also read for its **grid position**, "
+         "supplier, connection, on-site generation, cooling and who is building and funding it (`app/phantom/power.py`; rules only, every fact keeps its quote).", "",
+         f"**{gw(h['secured_mw'])} of {gw(h['announced_mw'])} announced ({pct(h['secured_share'])}) has a secured grid position** — operating, or with a "
+         f"verified supply agreement. Of the {gw(h['pipeline_mw'])} that is not yet operating, a signed grid agreement was found for "
+         f"**{gw(h['pipeline_secured']['mw'])} ({pct(h['pipeline_secured']['share'])})** across {h['pipeline_secured']['projects']} projects.", "",
+         "| Grid position | Projects | Announced | Share |", "|---|---|---|---|", *rows, "",
+         "Signals across the pipeline (projects not yet operating):", "",
+         "| Signal | Projects | Capacity | Share of pipeline |", "|---|---|---|---|",
+         *[f"| {name} | {v['projects']} | {gw(v['mw'])} | {pct(v['share'])} |" for name, v in sig], ""]
+    if f.get("agreements"):
+        L += ["Projects with a verified grid agreement:", "", "| Project | Capacity | Supplier | Connection |", "|---|---|---|---|"]
+        for p in f["agreements"]:
+            conn = " · ".join(x for x in (f"{p['grid_kv']:g} kV" if p.get("grid_kv") else None, f"{p['grid_mva']:g} MVA" if p.get("grid_mva") else None,
+                                          f"{p['substation']} substation" if p.get("substation") else None) if x)
+            L.append(f"| {p['name']} | {(p['capacity_mw'] or 0):g} MW | {p.get('utilities') or p.get('power_partner') or '—'} | {conn or '—'} |")
+        L.append("")
+    L += [f"How much of this the news actually states — of {f['n']} projects: supplier named {cov['utilities']}, connection voltage {cov['grid_kv']}, "
+          f"contracted MVA {cov['grid_mva']}, substation {cov['substation']}, cooling design {cov['cooling']}, renewable procurement {cov['renewable']}, "
+          f"on-site generation {cov['onsite']}, rack density {cov['rack_kw']}, PUE {cov['pue']}, contractor {cov['contractors']}, financier {cov['financiers']}. "
+          f"**{h['with_any_fact']} projects ({pct(h['with_any_fact'] / f['n'] if f['n'] else None)}) have at least one power fact.**", "",
+          "The finding is the gap itself: public news names a power supplier for a small minority of projects, and a signed grid agreement for fewer still. "
+          "For a supplier, the projects in *No public evidence* with a credible developer are the open opportunities; for an analyst, "
+          "this is the field that filings (supply agreements, environmental clearances) would fill.", ""]
+    return L
+
+
+def developer_section(f: Dict[str, Any]) -> List[str]:
+    devs = [d for d in f.get("developers") or [] if d["projects"] >= 3][:15]
+    if not devs:
+        return []
+    pct = lambda x: "—" if x is None else f"{x:.0%}"  # noqa: E731
+    L = ["", "## Developer track records", "",
+         "Who builds what they announce? *Judged* counts only projects first reported 24+ months ago — a recent announcement cannot count against anyone — "
+         "and *build rate* is the share of those with verified construction or operation (shown from 3 judged projects). "
+         "*Months to ground* is the median wait from first report to first verified construction evidence.", "",
+         "| Developer | Projects | Announced | Live | Building | Judged | Built | Build rate | Months to ground | Secured grid |",
+         "|---|---|---|---|---|---|---|---|---|---|"]
+    for d in devs:
+        L.append(f"| {d['developer']} | {d['projects']} | {gw(d['announced_mw'])} | {d['live']} | {d['building']} | {d['judged']} | {d['built_of_judged']} | "
+                 f"{pct(d['build_rate'])} | {d['months_to_ground'] if d['months_to_ground'] is not None else '—'} | {gw(d['secured_mw']) if d['secured_mw'] else '—'} |")
+    L += ["", "The record is shown, not scored: the backtest could test \"has built two or more other projects\" on only 6 cases "
+              "(4 progressed, against a 13% base rate) — encouraging, and far too few to tune a weight on.", ""]
+    return L
 
 
 def main():

@@ -45,6 +45,14 @@ def _d(dt) -> Optional[str]:
     return dt.date().isoformat() if dt else None
 
 
+def _as_uuid(v):
+    import uuid
+    try:
+        return uuid.UUID(str(v))
+    except (ValueError, TypeError):
+        return None
+
+
 def tables(db=None) -> Dict[str, List[Dict[str, Any]]]:
     """Flatten the Phantom database into export tables (list of row dicts each)."""
     own = db is None
@@ -55,6 +63,8 @@ def tables(db=None) -> Dict[str, List[Dict[str, Any]]]:
         out: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
         for p in projects:
             pid = str(p.id)
+            pw = p.power or {}
+            j = lambda xs: "; ".join(str(x) for x in xs or []) or None  # noqa: E731
             score = p.reality_score or 0.0
             cap = p.capacity_mw
             out["projects"].append({
@@ -67,7 +77,16 @@ def tables(db=None) -> Dict[str, List[Dict[str, Any]]]:
                 "power_partner": p.power_partner, "cooling": p.cooling, "ai_density": bool(p.ai_density),
                 "n_sources": p.n_sources, "first_seen": _d(p.first_seen), "last_seen": _d(p.last_seen),
                 "weakest_assumption": p.weakest_assumption,
+                "grid_position": pw.get("grid_position", "NO_EVIDENCE"), "grid_secured": bool(pw.get("secured")),
+                "utilities": j(pw.get("utilities")), "grid_kv": pw.get("grid_kv"), "grid_mva": pw.get("grid_mva"), "substation": pw.get("substation"),
+                "onsite_generation": j(pw.get("onsite")), "renewable_procurement": j(pw.get("renewable")), "cooling_tech": j(pw.get("cooling")),
+                "rack_kw": pw.get("rack_kw"), "pue": pw.get("pue"), "contractors": j(pw.get("contractors")), "financiers": j(pw.get("financiers")),
             })
+            for f in pw.get("facts") or []:
+                a = arts.get(_as_uuid(f.get("article_id")))
+                out["power_facts"].append({"project_id": pid, "project": p.name, "field": f["field"], "value": f["value"],
+                                           "planned": bool(f.get("planned")), "quote": f.get("quote"),
+                                           "source": a.source if a else None, "url": a.url if a else None})
             for key, seg in (p.call_segments or {}).items():
                 out["who_to_call"].append({"project_id": pid, "project": p.name, "segment": SEGMENT_NAMES.get(key, key),
                                            "priority": seg.get("priority"), "reasons": " · ".join(seg.get("reasons") or [])})
@@ -85,7 +104,9 @@ def tables(db=None) -> Dict[str, List[Dict[str, Any]]]:
             out["articles"].append({"article_id": str(a.id), "title": a.title, "source": a.source, "feed": a.feed,
                                     "published": _d(a.published_at), "text_kind": a.text_kind,
                                     "relevant": a.relevant, "extracted": a.extracted, "url": a.url})
-        for k in ("projects", "who_to_call", "score_terms", "evidence", "anomalies", "articles"):
+        from app.phantom.track import from_db
+        out["developers"] = from_db(db)
+        for k in ("projects", "who_to_call", "score_terms", "evidence", "power_facts", "developers", "anomalies", "articles"):
             out.setdefault(k, [])
         out["projects"].sort(key=lambda r: -(r["capacity_mw"] or 0))
         out["who_to_call"].sort(key=lambda r: -(r["priority"] or 0))
@@ -166,14 +187,15 @@ def build_xlsx(data: Optional[Dict[str, List[Dict[str, Any]]]] = None) -> bytes:
         ("Average reality score", f"=AVERAGE({P(cols['reality_score'])})", "0%"),
         ("Projects with a named power partner", f"=COUNTIF({P(cols['power_partner'])},\"?*\")", "0"),
         ("Single-source projects", f"=COUNTIF({P(cols['n_sources'])},1)", "0"),
+        ("Capacity with a secured grid position (MW)", f"=SUMIFS({P(cols['capacity_mw'])},{P(cols['grid_secured'])},TRUE)", "#,##0"),
     ] if cols else []
     for i, (label, formula, fmt) in enumerate(kpis, start=4):
         ws.cell(i, 1, label).font = Font(bold=True)
         c = ws.cell(i, 2, formula)
         c.number_format = fmt
     ws.column_dimensions["A"].width, ws.column_dimensions["B"].width = 38, 18
-    ws["A13"] = "Sheets: Projects · Who to call · Evidence · Anomalies · Score terms · Articles · Analysis (live SUMIFS/COUNTIFS + charts)"
-    ws["A13"].font = Font(color="666666")
+    ws["A14"] = "Sheets: Projects · Who to call · Evidence · Power facts · Developers · Anomalies · Score terms · Articles · Analysis (live SUMIFS/COUNTIFS + charts)"
+    ws["A14"].font = Font(color="666666")
 
     # 2. Data sheets
     pw = sheet("Projects", data["projects"], {"name": 42, "developer": 20, "weakest_assumption": 60, "project_id": 12})
@@ -189,6 +211,8 @@ def build_xlsx(data: Optional[Dict[str, List[Dict[str, Any]]]] = None) -> bytes:
     ev = sheet("Evidence", data["evidence"], {"quote": 90, "url": 50, "source": 24})
     for row in ev.iter_rows(min_row=2, min_col=3, max_col=3):
         row[0].alignment = Alignment(wrap_text=False)
+    sheet("Power facts", data.get("power_facts") or [], {"project": 42, "quote": 90, "url": 50, "source": 24})
+    sheet("Developers", data.get("developers") or [], {"developer": 30, "countries": 16})
     sheet("Anomalies", data["anomalies"], {"message": 90})
     sheet("Score terms", data["score_terms"], {"term": 34, "why": 80})
     sheet("Articles", data["articles"], {"title": 70, "url": 50, "source": 26})

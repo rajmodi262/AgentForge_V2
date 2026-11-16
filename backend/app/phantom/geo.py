@@ -12,7 +12,7 @@ from typing import Optional, Tuple
 # canonical: (state, country, lat, lon, [aliases])
 PLACES = {
     # Malaysia
-    "Johor Bahru": ("Johor", "Malaysia", 1.4927, 103.7414, ["johor bahru", "jb", "johor baru"]),
+    "Johor Bahru": ("Johor", "Malaysia", 1.4927, 103.7414, ["johor bahru", "jb", "johor baru", "ulu tiram", "tebrau"]),
     "Kulai": ("Johor", "Malaysia", 1.6561, 103.6032, ["kulai", "kulaijaya"]),
     "Sedenak": ("Johor", "Malaysia", 1.6870, 103.5460, ["sedenak", "sedenak tech park", "stp"]),
     "Iskandar Puteri": ("Johor", "Malaysia", 1.4250, 103.6420, ["iskandar puteri", "nusajaya", "iskandar"]),
@@ -27,7 +27,7 @@ PLACES = {
     "Penang": ("Penang", "Malaysia", 5.4141, 100.3288, ["penang", "batu kawan"]),
     # India
     "Navi Mumbai": ("Maharashtra", "India", 19.0330, 73.0297, ["navi mumbai", "panvel", "airoli", "mahape", "rabale", "ghansoli"]),
-    "Mumbai": ("Maharashtra", "India", 19.0760, 72.8777, ["mumbai", "bombay", "chandivali", "powai", "bkc", "thane", "bhiwandi"]),
+    "Mumbai": ("Maharashtra", "India", 19.0760, 72.8777, ["mumbai", "bombay", "chandivali", "powai", "bkc", "thane", "bhiwandi", "palava", "dombivli"]),
     "Pune": ("Maharashtra", "India", 18.5204, 73.8567, ["pune", "chakan", "talegaon", "hinjewadi"]),
     "Chennai": ("Tamil Nadu", "India", 13.0827, 80.2707, ["chennai", "ambattur", "siruseri", "sriperumbudur", "oragadam", "kanchipuram"]),
     "Hyderabad": ("Telangana", "India", 17.3850, 78.4867, ["hyderabad", "shamshabad", "medchal", "gachibowli"]),
@@ -51,21 +51,39 @@ COUNTRY_CENTRE = {"Malaysia": (3.9, 102.0), "India": (21.0, 78.0)}
 _ALIAS = sorted(((a, canon) for canon, v in PLACES.items() for a in v[4]), key=lambda x: -len(x[0]))
 
 
+# State-level fallbacks for India: used only when no city is named anywhere ("25 acres in Andhra Pradesh").
+# Kept apart from PLACES so a state name can never outrank a city in the same sentence.
+STATES = {
+    "Andhra Pradesh": ("Andhra Pradesh", "India", 15.9129, 79.7400, ["andhra pradesh", "anakapalli", "amaravati"]),
+    "Maharashtra": ("Maharashtra", "India", 19.7515, 75.7139, ["maharashtra"]),
+    "Tamil Nadu": ("Tamil Nadu", "India", 11.1271, 78.6569, ["tamil nadu"]),
+    "Telangana": ("Telangana", "India", 18.1124, 79.0193, ["telangana"]),
+    "Uttar Pradesh": ("Uttar Pradesh", "India", 26.8467, 80.9462, ["uttar pradesh"]),
+    "Gujarat": ("Gujarat", "India", 22.2587, 71.1924, ["gujarat"]),
+    "Karnataka": ("Karnataka", "India", 15.3173, 75.7139, ["karnataka"]),
+    "West Bengal": ("West Bengal", "India", 22.9868, 87.8550, ["west bengal"]),
+    "Odisha": ("Odisha", "India", 20.9517, 85.0985, ["odisha", "orissa"]),
+    "Rajasthan": ("Rajasthan", "India", 27.0238, 74.2179, ["rajasthan"]),
+}
+PLACES.update({k: v for k, v in STATES.items() if k not in PLACES})
+_STATE_ALIAS = sorted(((a, canon) for canon, v in STATES.items() for a in v[4]), key=lambda x: -len(x[0]))
+
+
 def resolve_place(*texts: Optional[str]) -> Optional[str]:
-    """First canonical place whose alias appears in any of the given strings (longest alias wins)."""
-    for t in texts:
-        low = (t or "").lower()
-        if not low:
-            continue
-        for alias, canon in _ALIAS:
-            if re.search(rf"\b{re.escape(alias)}\b", low):
-                return canon
+    """First canonical place whose alias appears in any of the given strings (longest alias wins).
+    Cities are tried across ALL strings before any state-level fallback."""
+    lows = [(t or "").lower() for t in texts if t]
+    for table in (_ALIAS, _STATE_ALIAS):
+        for low in lows:
+            for alias, canon in table:
+                if re.search(rf"\b{re.escape(alias)}\b", low):
+                    return canon
     return None
 
 
 _IN = re.compile(r"\bindia\b|\bindian\b|₹|\brs\.?\s?\d|\bcrore\b|\blakh\b|maharashtra|tamil nadu|telangana|uttar pradesh|karnataka", re.I)
 _MY = re.compile(r"\bmalaysia\b|\bmalaysian\b|\bringgit\b|\brm\s?\d|\bjohor\b|selangor|\btnb\b|tenaga nasional|bursa", re.I)
-_OTHER = re.compile(r"\b(indonesia|jakarta|batam|singapore|thailand|bangkok|vietnam|philippines|japan|australia|united states|u\.s\.|europe|finland|nurmij\w*|sweden|norway|denmark|ireland|germany|netherlands|spain|united kingdom|hong kong|china|taiwan|korea|philippine|manila|tokyo|osaka|seoul|pohang|sydney|melbourne|texas|virginia|oregon|ohio|arizona|london|uk|france|paris|frankfurt|amsterdam|dublin|madrid|italy|milan|cordoba|argentina|brazil|chile|mexico|canada|saudi|uae|dubai|abu dhabi|qatar|africa|nigeria|kenya)\b", re.I)
+_OTHER = re.compile(r"\b(indonesia|jakarta|batam|singapore|thailand|bangkok|vietnam|philippines|japan|australia|united states|u\.s\.|europe|finland|nurmij\w*|sweden|norway|denmark|ireland|germany|netherlands|spain|united kingdom|hong kong|china|taiwan|korea|philippine|manila|tokyo|saitama|osaka|nongsa|trinidad|tobago|seoul|pohang|sydney|melbourne|texas|virginia|oregon|ohio|arizona|wyoming|idaho|nevada|indiana|louisiana|tennessee|wisconsin|michigan|pennsylvania|new jersey|california|illinois|iowa|london|uk|france|paris|frankfurt|amsterdam|dublin|madrid|italy|milan|cordoba|argentina|brazil|chile|mexico|canada|saudi|uae|dubai|abu dhabi|qatar|africa|nigeria|kenya)\b", re.I)
 
 
 def infer_country(*texts: Optional[str]) -> Optional[str]:

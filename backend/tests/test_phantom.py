@@ -276,3 +276,26 @@ def test_same_project_from_two_sections_merges():
     m = _merge_projects([a, b])
     assert len(m) == 1 and m[0].developer == "AirTrunk" and m[0].capacity_mw == 150
     assert {getattr(e.layer, "value", e.layer) for e in m[0].events} == {"ANNOUNCED", "POWER"}
+
+
+def test_placeless_projects_need_their_own_country_evidence_and_states_are_a_fallback():
+    from datetime import datetime, timezone
+    from app.phantom.geo import resolve_place
+    from app.phantom.resolve import resolve
+    assert resolve_place("25 acres in Andhra Pradesh for the campus") == "Andhra Pradesh"
+    assert resolve_place("a campus in Visakhapatnam, Andhra Pradesh") == "Visakhapatnam"          # a city always beats its state
+    assert resolve_place("Andhra Pradesh allocates land", "the Vizag site") == "Visakhapatnam"    # …even across strings
+    t = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    m = lambda i, name, dev, **d: {"id": i, "article_id": f"a{i}", "text_kind": "full", "published": t,  # noqa: E731
+                                   "data": {"project_name": name, "developer": dev, "country": "India", "events": [], **d}}
+    names = [c["name"] for c in resolve([
+        m(1, "Lodha Aurum Data Centre Park", "Lodha", capacity_mw=3500, _country_from="mention"),          # placeless but its own text says India
+        m(2, "Project Matador Data Center", "Fermi America", capacity_mw=222, _country_from="article"),  # country borrowed from the page
+        m(3, "Nxtra", "Nxtra", capacity_mw=1000, _country_from="mention"),                            # a company target, not a project
+        m(4, "Vantage LHR2", "Vantage Data Centers", capacity_mw=20, _country_from="article"),        # a London site code
+        m(5, "Multiple sites", "Princeton Digital Group", capacity_mw=210, _country_from="mention"),  # a programme, not one project
+        m(6, "Sify 500 MW campus", "Sify", capacity_mw=500, state="Andhra Pradesh", _country_from="mention"),
+        m(7, "Sify Vizag hyperscale campus", "Sify", capacity_mw=500, city="Visakhapatnam", _country_from="mention"),
+    ])]
+    assert any("Lodha" in n for n in names) and len([n for n in names if "Sify" in n]) == 1   # state-level and city mention merge
+    assert not any(x in " ".join(names) for x in ("Matador", "LHR2", "Multiple", "Nxtra"))

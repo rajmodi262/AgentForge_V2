@@ -73,7 +73,27 @@ def init_db():
     from app.models.db_models import User, Project, WorkflowRun, AgentTask, AgentMessage, ProjectReport  # noqa
     import app.phantom.models  # noqa: F401 — Phantom Hunter tables
     Base.metadata.create_all(bind=engine)
+    add_missing_columns()
     logger.info("Database tables created/verified")
+
+
+def add_missing_columns(tables=("ph_projects",)) -> list:
+    """create_all never alters an existing table. For the Phantom tables (rebuilt from mentions, so
+    always safe to extend) add any column the model has and the database lacks."""
+    from sqlalchemy import inspect, text
+    added = []
+    insp = inspect(engine)
+    for name in tables:
+        table = Base.metadata.tables.get(name)
+        if table is None or not insp.has_table(name):
+            continue
+        have = {c["name"] for c in insp.get_columns(name)}
+        for col in table.columns:
+            if col.name not in have:
+                with engine.begin() as conn:
+                    conn.execute(text(f'ALTER TABLE {name} ADD COLUMN {col.name} {col.type.compile(engine.dialect)}'))
+                added.append(f"{name}.{col.name}")
+    return added
 
 
 def get_db():

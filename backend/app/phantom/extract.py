@@ -65,7 +65,9 @@ KNOWN_DEVELOPERS: Dict[str, List[str]] = {
 
 GENERIC_NAME = re.compile(r"\b(hub|market|industry|sector|state|region|country|capacity|pipeline|corridor|demand)\b", re.I)
 # names that describe a deal / supply contract rather than a facility
-NON_FACILITY = re.compile(r"\b(agreement|deal|partnership|alliance|contract|fuel[- ]?cells?|ppa|mou|order|tender|investment plan|funding|ipo|stake|acquisition of|solar|wind farm|hydro|power plant|battery storage)\b", re.I)
+NON_FACILITY = re.compile(r"\b(agreement|deal|partnership|alliance|contract|fuel[- ]?cells?|ppa|mou|order|tender|investment plan|funding|ipo|stake|acquisition of|solar|wind farm|hydro|power plant|battery storage|clean energy|national grid|renewable energy|steel plant|capital investment|it/ites)\b", re.I)
+# a name that covers several sites is a programme, not one project
+MANY_SITES = re.compile(r"\b(?:multiple|several|various|two|three|four|five|six|\d+) (?:new |more |additional )?(?:sites|facilities|data[\s-]?cent(?:er|re)s|campuses|locations)\b", re.I)
 
 
 def gazetteer_developer(text: str, project_name: Optional[str] = None) -> Optional[str]:
