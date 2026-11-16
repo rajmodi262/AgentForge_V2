@@ -51,7 +51,14 @@ def load_calibration(path: Path = CALIBRATION_FILE) -> Optional[Dict[str, Any]]:
 
 CALIBRATION = load_calibration()
 PRIOR = dict(CALIBRATION["priors"]) if CALIBRATION else dict(PRIOR_ASSUMED)
-NEG = {"CANCELLED": None, "DELAYED": -0.6, "OPPOSITION": -0.5, "SCALED_DOWN": -0.3}
+# Every adjustment the scorer can make, in log-odds. One table, so the UI's what-if sliders,
+# the docs and the scorer can never disagree.
+WEIGHTS = {"single_source": -0.3, "multi_source": 0.3, "headline_only": -0.2, "financed": 0.4, "power_partner": 0.4,
+           "delayed": -0.6, "opposition": -0.5, "scaled_down": -0.3, "gone_quiet": -0.5, "target_passed": -0.5}
+WEIGHT_LABELS = {"single_source": "Single source", "multi_source": "3+ independent sources", "headline_only": "Headline-only evidence",
+                 "financed": "Financing secured", "power_partner": "Named power partner", "delayed": "Delayed", "opposition": "Opposition",
+                 "scaled_down": "Scaled down", "gone_quiet": "Gone quiet (18+ months)", "target_passed": "Target date passed"}
+NEG = {"CANCELLED": None, "DELAYED": WEIGHTS["delayed"], "OPPOSITION": WEIGHTS["opposition"], "SCALED_DOWN": WEIGHTS["scaled_down"]}
 
 logit = lambda p: math.log(p / (1 - p))  # noqa: E731
 sigmoid = lambda x: 1 / (1 + math.exp(-x))  # noqa: E731
@@ -87,44 +94,44 @@ def reality(p: Dict[str, Any], now: Optional[datetime] = None, priors: Optional[
                 if row and row.get("n") else " — stated assumption (no back-tested cases at this layer yet)")
     else:
         why += " — stated assumption, not yet fitted"
-    br: List[Dict[str, Any]] = [{"term": f"Evidence layer: {LAYERS[stage]}", "delta": None, "value": priors[stage], "why": why}]
+    br: List[Dict[str, Any]] = [{"key": "prior", "term": f"Evidence layer: {LAYERS[stage]}", "delta": None, "value": priors[stage], "why": why}]
     if "CANCELLED" in layers:
-        br.append({"term": "Cancelled", "delta": None, "value": 0.03, "why": "a verified source reports the project cancelled or withdrawn"})
+        br.append({"key": "cancelled", "term": "Cancelled", "delta": None, "value": 0.03, "why": "a verified source reports the project cancelled or withdrawn"})
         return 0.03, br
     x = logit(priors[stage])
 
-    def add(term: str, delta: float, why: str):
+    def add(key: str, term: str, why: str):
         nonlocal x
-        x += delta
-        br.append({"term": term, "delta": round(delta, 2), "why": why})
+        x += WEIGHTS[key]
+        br.append({"key": key, "term": term, "delta": round(WEIGHTS[key], 2), "why": why})
 
     n_src = len(p.get("article_ids") or [])
     if n_src <= 1:
-        add("Single source", -0.3, "only one article reports this project")
+        add("single_source", "Single source", "only one article reports this project")
     elif n_src >= 3:
-        add(f"{n_src} independent sources", +0.3, "corroborated by three or more articles")
+        add("multi_source", f"{n_src} independent sources", "corroborated by three or more articles")
 
     kinds = p.get("text_kinds") or []
     if kinds and all(k == "summary" for k in kinds):
-        add("Headline-only evidence", -0.2, "publishers blocked full text; evidence comes from headlines and summaries")
+        add("headline_only", "Headline-only evidence", "publishers blocked full text; evidence comes from headlines and summaries")
 
     if "FINANCED" in layers and stage < 5:
-        add("Financing secured", +0.4, "a verified source reports a loan / debt facility / capital raise for the project")
+        add("financed", "Financing secured", "a verified source reports a loan / debt facility / capital raise for the project")
 
     if stage < 3 and p.get("power_partner"):
-        add(f"Named power partner ({p['power_partner']})", +0.4, "a utility or supplier is named, short of a verified agreement")
+        add("power_partner", f"Named power partner ({p['power_partner']})", "a utility or supplier is named, short of a verified agreement")
 
     for neg, d in NEG.items():
         if neg in layers and d is not None:
-            add(neg.replace("_", " ").title(), d, f"a verified source reports {neg.lower().replace('_', ' ')}")
+            add(neg.lower(), neg.replace("_", " ").title(), f"a verified source reports {neg.lower().replace('_', ' ')}")
 
     last = _aware(p.get("last_seen"))
     if stage < 5 and last and (now - last).days > 540:
-        add("Gone quiet", -0.5, f"no news for {(now - last).days // 30} months")
+        add("gone_quiet", "Gone quiet", f"no news for {(now - last).days // 30} months")
 
     ty = p.get("target_year")
     if stage < 5 and ty and ty < now.year:
-        add("Target date passed", -0.5, f"was due in {ty} and no evidence it is live")
+        add("target_passed", "Target date passed", f"was due in {ty} and no evidence it is live")
 
     return round(sigmoid(x), 3), br
 

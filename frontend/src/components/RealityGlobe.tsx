@@ -9,8 +9,23 @@ import { useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
-import type { PhProject } from '../services/phantom';
 import { fmtMW, scoreColor } from '../services/phantom';
+
+/** The few fields the globe needs — so the dashboard, the time machine and the power view can all feed it. */
+export interface GlobeItem {
+  id: string; name: string; lat: number | null; lon: number | null; capacity_mw: number | null; reality_score: number;
+  stage_name?: string; city?: string | null; country?: string | null;
+}
+type PhProject = GlobeItem;
+export interface GlobeStyle {
+  /** colour of the solid bar and base ring (default: by reality score) */
+  colorOf?: (p: GlobeItem) => string;
+  /** how much of the announced bar is filled, 0–1 (default: the reality score) */
+  fillOf?: (p: GlobeItem) => number;
+  /** second line of the hover card */
+  detailOf?: (p: GlobeItem) => string;
+  legend?: React.ReactNode;
+}
 
 const R = 2;
 
@@ -71,14 +86,15 @@ function Earth() {
   );
 }
 
-function Bar({ p, maxMw, onPick, hovered, setHovered }: { p: PhProject; maxMw: number; onPick: (id: string) => void; hovered: string | null; setHovered: (id: string | null) => void }) {
+function Bar({ p, maxMw, onPick, hovered, setHovered, look }: { p: PhProject; maxMw: number; onPick: (id: string) => void; hovered: string | null; setHovered: (id: string | null) => void; look: GlobeStyle }) {
   const base = toVec(p.lat!, p.lon!);
   const up = base.clone().normalize();
   const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), up);
   const mw = p.capacity_mw || 40;
   const hA = 0.06 + 1.1 * Math.sqrt(mw / maxMw);
-  const hR = Math.max(0.02, hA * (p.reality_score || 0));
-  const col = scoreColor(p.reality_score || 0);
+  const fill = look.fillOf ? look.fillOf(p) : p.reality_score || 0;
+  const hR = Math.max(0.02, hA * fill);
+  const col = look.colorOf ? look.colorOf(p) : scoreColor(p.reality_score || 0);
   const isH = hovered === p.id;
   return (
     <group position={base} quaternion={q}
@@ -101,8 +117,8 @@ function Bar({ p, maxMw, onPick, hovered, setHovered }: { p: PhProject; maxMw: n
         <Html position={[0, hA + 0.08, 0]} center style={{ pointerEvents: 'none' }}>
           <div style={{ background: 'rgba(10,8,20,0.92)', border: `1px solid ${col}`, borderRadius: 8, padding: '6px 10px', color: '#fff', fontSize: 12, whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>
             <b>{p.name}</b><br />
-            {fmtMW(p.capacity_mw)} announced · <span style={{ color: col }}>{Math.round((p.reality_score || 0) * 100)}% real</span><br />
-            <span style={{ color: '#94a3b8' }}>{p.stage_name} · {p.city || p.country}</span>
+            {p.capacity_mw ? `${fmtMW(p.capacity_mw)} announced` : 'size not stated'} ·<span style={{ color: col }}>{look.detailOf ? look.detailOf(p) : `${Math.round((p.reality_score || 0) * 100)}% real`}</span><br />
+            <span style={{ color: '#94a3b8' }}>{[p.stage_name, p.city || p.country].filter(Boolean).join(' · ')}</span>
           </div>
         </Html>
       )}
@@ -117,9 +133,9 @@ function Spinner({ children }: { children: React.ReactNode }) {
   return <group ref={g}>{children}</group>;
 }
 
-export default function RealityGlobe({ projects, onPick, height = 460 }: { projects: PhProject[]; onPick: (id: string) => void; height?: number }) {
+export default function RealityGlobe({ projects, onPick, height = 460, look = {} }: { projects: PhProject[]; onPick: (id: string) => void; height?: number; look?: GlobeStyle }) {
   const [hovered, setHovered] = useState<string | null>(null);
-  const placed = projects.filter((p) => p.lat != null && p.lon != null);
+  const placed = useMemo(() => projects.filter((p) => p.lat != null && p.lon != null), [projects]);
   // jitter projects that share a city so their bars don't overlap
   const jittered = useMemo(() => {
     const seen: Record<string, number> = {};
@@ -139,13 +155,15 @@ export default function RealityGlobe({ projects, onPick, height = 460 }: { proje
         <pointLight position={[5, 5, 5]} intensity={40} color="#a78bfa" />
         <Spinner>
           <Earth />
-          {jittered.map((p) => <Bar key={p.id} p={p} maxMw={maxMw} onPick={onPick} hovered={hovered} setHovered={setHovered} />)}
+          {jittered.map((p) => <Bar key={p.id} p={p} maxMw={maxMw} onPick={onPick} hovered={hovered} setHovered={setHovered} look={look} />)}
         </Spinner>
         <OrbitControls enablePan={false} minDistance={3} maxDistance={8} rotateSpeed={0.5} />
       </Canvas>
       <div style={{ position: 'absolute', left: 14, bottom: 12, fontSize: 11, color: '#94a3b8', fontFamily: 'JetBrains Mono, monospace', lineHeight: 1.6 }}>
-        <span style={{ display: 'inline-block', width: 10, height: 10, background: '#c4b5fd', opacity: 0.4, marginRight: 6 }} />announced MW
-        <span style={{ display: 'inline-block', width: 10, height: 10, background: '#10b981', margin: '0 6px 0 14px' }} />reality-weighted MW · drag to rotate · click a bar
+        {look.legend ?? (<>
+          <span style={{ display: 'inline-block', width: 10, height: 10, background: '#c4b5fd', opacity: 0.4, marginRight: 6 }} />announced MW
+          <span style={{ display: 'inline-block', width: 10, height: 10, background: '#10b981', margin: '0 6px 0 14px' }} />reality-weighted MW · drag to rotate · click a bar
+        </>)}
       </div>
     </div>
   );

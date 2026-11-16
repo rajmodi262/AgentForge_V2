@@ -208,6 +208,31 @@ def mature(rows: List[Dict[str, Any]], latest: datetime) -> List[Dict[str, Any]]
     return [r for r in rows if (latest - datetime.fromisoformat(r["cutoff"]).replace(tzinfo=timezone.utc)).days >= 365 * MATURE_YEARS]
 
 
+CACHE_FILE = S.CALIBRATION_FILE.with_name("backtest_cache.json")
+
+
+def cache(res: Dict[str, Any]) -> Dict[str, Any]:
+    """What the Calibration Lab and the Time Machine in the UI read: every case, both scorings, all the tables.
+    Written to a file because replaying four cutoffs takes far longer than a page load."""
+    import json
+    import uuid
+    fitted = res.get("fitted") or S.PRIOR_ASSUMED
+    rows = []
+    for r in rescore(res["pooled_rows"], fitted):
+        stated = next(x for x in res["pooled_rows"] if x["project"] == r["project"] and x["cutoff"] == r["cutoff"])
+        rows.append({"project_id": str(uuid.uuid5(uuid.NAMESPACE_URL, f"phantom:{r['project']}")), "name": r["name"], "developer": r["developer"],
+                     "country": r["country"], "cutoff": r["cutoff"], "stage_then": r["stage_then"], "stage_now": r["stage_now"],
+                     "progressed": r["progressed"], "score_stated": stated["reality_score"], "score_fitted": r["reality_score"],
+                     "news_after": r["news_after_cutoff"], "sources_then": r["n_sources_then"]})
+    keep = ("pooled", "pooled_pre_construction", "assumed_mature", "assumed_mature_pre", "cv", "cv_pre", "recent_assumed_pre", "recent_fitted_pre",
+            "by_cutoff", "by_cutoff_pre_construction", "fitted_priors", "fit_cases", "fit_cutoffs", "cutoffs")
+    out = {"generated": datetime.now(timezone.utc).isoformat(), "rows": rows, "fitted": {str(k): v for k, v in fitted.items()},
+           "assumed": {str(k): v for k, v in S.PRIOR_ASSUMED.items()}, "shrink": SHRINK, "mature_years": MATURE_YEARS,
+           "bands": {"phantom": PHANTOM_CALL, "likely": LIKELY_CALL}, **{k: res.get(k) for k in keep}}
+    CACHE_FILE.write_text(json.dumps(out, default=str), encoding="utf-8")
+    return out
+
+
 def calibration(res: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """The file score.py loads: fitted priors plus where they came from."""
     if not res.get("fitted"):
@@ -377,9 +402,12 @@ def main():
             print(f"not enough mature cases to fit ({res['fit_cases']['n']} < {MIN_FIT_CASES})")
             return
         S.CALIBRATION_FILE.write_text(json.dumps(cal, indent=2), encoding="utf-8")
+        cache(res)
         print("wrote", S.CALIBRATION_FILE.name, cal["priors"], f"({cal['cases']} cases, {cal['projects']} projects)")
         print("now run:  python -c \"from app.phantom.pipeline import rebuild_projects; print(rebuild_projects())\"")
         return
+    if "--cache" in sys.argv:
+        print("wrote", CACHE_FILE.name, len(cache(res)["rows"]), "cases")
     if "--rows" in sys.argv:
         for r in sorted(res["pooled_rows"], key=lambda r: (r["cutoff"], -r["reality_score"])):
             print(f"{r['cutoff']} {r['reality_score']:.2f} {r['stage_then']:9} -> {r['stage_now']:9} {'Y' if r['progressed'] else '.'} news={r['news_after_cutoff']:2} {r['name'][:60]}")

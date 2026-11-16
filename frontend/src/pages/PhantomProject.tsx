@@ -11,6 +11,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import { colors, radii } from '../styles/tokens';
 import { phantom, fmtMW, scoreColor, STAGE_COLORS, type ProjectDetail } from '../services/phantom';
 import { ScorePill, StagePill } from './PhantomHunter';
+import PowerCard from '../components/PowerCard';
 
 const card: React.CSSProperties = { background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: radii.lg, padding: '1.25rem' };
 const mono = "'JetBrains Mono', monospace";
@@ -60,7 +61,7 @@ export default function PhantomProject() {
         <div style={{ ...card, display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap', marginBottom: 16 }}>
           <Gauge s={p.reality_score} />
           <div style={{ flex: 1, minWidth: 280 }}>
-            <div style={{ fontFamily: mono, fontSize: 11, color: colors.secondary, letterSpacing: '0.15em' }}>REALITY SCORE · PROBABILITY IT GETS BUILT</div>
+            <div style={{ fontFamily: mono, fontSize: 11, color: colors.secondary, letterSpacing: '0.15em' }}>REALITY SCORE · CHANCE IT REACHES CONSTRUCTION</div>
             <h1 style={{ margin: '4px 0', fontSize: '1.7rem', fontFamily: "'Space Grotesk', sans-serif" }}>{p.name}</h1>
             <div style={{ color: colors.textMuted, fontSize: 14 }}>
               {p.developer || 'Developer unknown'} · {[p.city, p.state, p.country].filter(Boolean).join(', ') || 'location unknown'} ·{' '}
@@ -99,6 +100,8 @@ export default function PhantomProject() {
             })}
           </div>
         </div>
+
+        <PowerCard power={p.power} facts={p.power_facts} capacityMw={p.capacity_mw} partner={p.power_partner} />
 
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.35fr) minmax(0,1fr)', gap: 16, marginBottom: 16 }}>
           {/* Evidence */}
