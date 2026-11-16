@@ -57,6 +57,7 @@ class PhProject(Base):
     power_source = Column(String(120))
     cooling = Column(String(120))
     ai_density = Column(Boolean, default=False)
+    power = Column(JSON)                    # power forensics dossier (power.dossier): grid position, utility, cooling, ecosystem + quotes
 
     stage = Column(Integer, default=0)      # highest verified ladder layer (0–5)
     reality_score = Column(Float)           # 0–1 probability the project gets built

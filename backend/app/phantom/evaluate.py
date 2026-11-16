@@ -195,6 +195,65 @@ def coverage_section() -> list:
             "Examples of queries it wrote: " + "; ".join(f"`{x}`" for x in list(dict.fromkeys(q for v in c["queries"].values() for q in v))[:6])]
 
 
+def power_audit_sample(db, n: int = 60, seed: int = 11, name: str = "PHANTOM_POWER_AUDIT_SAMPLE.csv") -> Path:
+    """A random sample of power facts for PEOPLE to grade (label columns left empty on purpose)."""
+    arts = {str(a.id): a for a in db.query(PhArticle).all()}
+    rows = []
+    for pr in db.query(PhProject).all():
+        for f in (pr.power or {}).get("facts", []):
+            a = arts.get(str(f.get("article_id")))
+            rows.append({"project": pr.name, "developer": pr.developer, "place": pr.city, "field": f["field"], "value": f["value"],
+                         "planned": f.get("planned"), "quote": f.get("quote"), "url": a.url if a else None,
+                         "fact_is_stated (y/n)": "", "about_this_project (y/n)": "", "labeller": "", "note": ""})
+    random.Random(seed).shuffle(rows)
+    path = ROOT / name
+    with path.open("w", newline="", encoding="utf-8-sig") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()) if rows else ["project"])
+        w.writeheader()
+        w.writerows(rows[:n])
+    return path
+
+
+def power_section() -> list:
+    from app.phantom import power as PW
+    from app.phantom.track import from_db
+    db = SessionLocal()
+    try:
+        ps = db.query(PhProject).all()
+        h = PW.headline([{"capacity_mw": p.capacity_mw, "stage": p.stage, "power": p.power} for p in ps])
+        n_facts = sum(len((p.power or {}).get("facts", [])) for p in ps)
+        by_field = Counter(f["field"] for p in ps for f in (p.power or {}).get("facts", []))
+        sample = power_audit_sample(db)
+        devs = [d for d in from_db(db) if d["build_rate"] is not None]
+    finally:
+        db.close()
+    pct = lambda x: "—" if x is None else f"{x:.0%}"  # noqa: E731
+    g = h["grid"]
+    return [
+        "", "## 7. Power forensics: coverage, not yet precision", "",
+        "`app/phantom/power.py` reads each project's sentences for grid position, supplier, connection, on-site generation, cooling, and who builds and "
+        "funds it. It is rules only (no LLM), every fact keeps its quote, and facts pass the same subject check as the evidence — plus two more: a company "
+        "name only counts when the sentence names the project's developer, and a sentence the miner attached to two projects in one article is kept only "
+        "where it points (facility code, city or capacity).", "",
+        f"**{n_facts} facts on {h['with_any_fact']} of {h['projects']} projects ({pct(h['with_any_fact'] / h['projects'] if h['projects'] else None)}).** "
+        "By field: " + ", ".join(f"{k} {v}" for k, v in by_field.most_common()) + ".", "",
+        "| Grid position | Projects | Announced MW |", "|---|---|---|",
+        *[f"| {PW.GRID_LABEL[k]} | {g[k]['projects']} | {g[k]['mw']:,.0f} |" for k in PW.GRID_POSITIONS if g[k]["projects"]], "",
+        f"Secured (operating, or a verified supply agreement): **{h['secured_mw']:,.0f} MW of {h['announced_mw']:,.0f} MW ({pct(h['secured_share'])})**. "
+        f"Among projects not yet operating: {h['pipeline_secured']['mw']:,.0f} MW ({pct(h['pipeline_secured']['share'])}) across "
+        f"{h['pipeline_secured']['projects']} projects.", "",
+        "**How to read the gap.** *No public evidence* means the sources say nothing about power — it is not proof that no agreement exists; "
+        "supply agreements are often unannounced. So the secured share is a floor, and the low coverage is itself the result: "
+        "news alone cannot answer the power question for most of the pipeline.", "",
+        f"**Precision is not claimed.** {sample.name} holds a random sample of facts with empty label columns "
+        "(is the fact stated? is it about this project?) for two people to grade independently. "
+        "Unit tests pin the rules on the failure cases found while building them (\"carrier-neutral\" is not the Carrier company, "
+        "a cable landing station is not a substation, \"avoiding evaporative cooling\" is not evaporative cooling).", "",
+        f"**Developer track records** (`app/phantom/track.py`, `GET /phantom/developers`): {len(devs)} developers have 3+ projects old enough to judge "
+        "(first reported 24+ months ago). The table is in `analytics/ANALYSIS.md`.",
+    ]
+
+
 def main():
     db = SessionLocal()
     try:
@@ -232,8 +291,13 @@ def main():
         *coverage_section(),
         *recall_section(),
         *backtest_section(),
-        "", "## 7. What is not measured yet (and how it would be)", "",
-        "- **A calibrated score at scale.** §6 is a first backtest on the projects old enough to judge; the layer priors are still stated assumptions until a few hundred outcomes exist to re-fit them.",
+        *power_section(),
+        "", "## 8. What is not measured yet (and how it would be)", "",
+        "- **Whether the score can pick winners early.** §6 validates it as a filter and shows it cannot yet separate pre-construction projects better than the base rate. "
+        "That needs a few hundred independent outcomes and stronger pre-construction evidence (filings).",
+        "- **Precision of the power facts.** §7 reports coverage; `PHANTOM_POWER_AUDIT_SAMPLE.csv` is a random sample with empty label columns for people to grade. "
+        "No precision figure is claimed until they have.",
+        "- **Human labels for §3.** The evidence audit is still a first pass by an AI assistant and should be relabelled by two people independently.",
         "- **Recall on small projects.** The reference list in §5 comes from published lists, which favour large operators; an analyst's full list for one region would measure the long tail.",
     ]
     out = ROOT / "PHANTOM_EVAL.md"

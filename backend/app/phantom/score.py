@@ -4,9 +4,12 @@ THE REALITY SCORE IS A TRANSPARENT LOG-ODDS MODEL, NOT A BLACK BOX.
 
     logit(p) = logit(prior[highest verified layer]) + Σ adjustments
 
-Priors (probability a project at that layer is eventually built) are explicit
-ASSUMPTIONS, anchored to public market evidence, and meant to be replaced by
-calibrated values once outcome data exists (see `calibrate()`):
+Priors (probability a project at that layer reaches verified construction or
+operation) started as explicit ASSUMPTIONS anchored to public market evidence
+(`PRIOR_ASSUMED`, below). `backtest.py --fit` re-fits them from back-tested
+outcomes and writes `calibration.json`; when that file is present the scorer
+uses the fitted values (`PRIOR`) and each score says where its prior came from.
+The stated assumptions, kept as the fallback and as the shrinkage target:
 
     layer        prior  anchor
     ANNOUNCED    0.25   Bernstein: only ~35% of the US pipeline looks credible;
@@ -25,12 +28,29 @@ missing piece of evidence whose presence would raise the score the most.
 
 from __future__ import annotations
 
+import json
 import math
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 LAYERS = ["ANNOUNCED", "SITE", "APPROVED", "POWER", "BUILDING", "LIVE"]
-PRIOR = {0: 0.25, 1: 0.40, 2: 0.50, 3: 0.75, 4: 0.88, 5: 0.98}
+PRIOR_ASSUMED = {0: 0.25, 1: 0.40, 2: 0.50, 3: 0.75, 4: 0.88, 5: 0.98}
+CALIBRATION_FILE = Path(__file__).with_name("calibration.json")
+
+
+def load_calibration(path: Path = CALIBRATION_FILE) -> Optional[Dict[str, Any]]:
+    """Priors re-fitted from back-tested outcomes (`python -m app.phantom.backtest --fit`), if present."""
+    try:
+        cal = json.loads(path.read_text(encoding="utf-8"))
+        cal["priors"] = {int(k): float(v) for k, v in cal["priors"].items()}
+        return cal if set(cal["priors"]) == set(PRIOR_ASSUMED) else None
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+
+CALIBRATION = load_calibration()
+PRIOR = dict(CALIBRATION["priors"]) if CALIBRATION else dict(PRIOR_ASSUMED)
 NEG = {"CANCELLED": None, "DELAYED": -0.6, "OPPOSITION": -0.5, "SCALED_DOWN": -0.3}
 
 logit = lambda p: math.log(p / (1 - p))  # noqa: E731
@@ -52,18 +72,26 @@ def stage_of(events: List[Dict[str, Any]]) -> int:
     return max(idx) if idx else 0
 
 
-def reality(p: Dict[str, Any], now: Optional[datetime] = None) -> Tuple[float, List[Dict[str, Any]]]:
+def reality(p: Dict[str, Any], now: Optional[datetime] = None, priors: Optional[Dict[int, float]] = None) -> Tuple[float, List[Dict[str, Any]]]:
     """Return (probability, breakdown). `p` is a resolved project (resolve.canonicalise output)."""
     now = now or _now()
+    fitted = priors is None and CALIBRATION is not None and PRIOR == CALIBRATION["priors"]
+    priors = priors or PRIOR
     events = p.get("events") or []
     layers = {e["layer"] for e in events}
     stage = stage_of(events)
-    br: List[Dict[str, Any]] = [{"term": f"Evidence layer: {LAYERS[stage]}", "delta": None, "value": PRIOR[stage],
-                                 "why": f"prior for a project whose highest verified evidence is {LAYERS[stage]}"}]
+    why = f"prior for a project whose highest verified evidence is {LAYERS[stage]}"
+    if fitted:
+        row = next((r for r in CALIBRATION.get("layers", []) if r.get("layer") == LAYERS[stage]), None)
+        why += (f" — fitted from the backtest: {row['progressed']} of {row['n']} such projects went on to verified construction or operation"
+                if row and row.get("n") else " — stated assumption (no back-tested cases at this layer yet)")
+    else:
+        why += " — stated assumption, not yet fitted"
+    br: List[Dict[str, Any]] = [{"term": f"Evidence layer: {LAYERS[stage]}", "delta": None, "value": priors[stage], "why": why}]
     if "CANCELLED" in layers:
         br.append({"term": "Cancelled", "delta": None, "value": 0.03, "why": "a verified source reports the project cancelled or withdrawn"})
         return 0.03, br
-    x = logit(PRIOR[stage])
+    x = logit(priors[stage])
 
     def add(term: str, delta: float, why: str):
         nonlocal x
@@ -234,13 +262,13 @@ def who_to_call(p: Dict[str, Any], score: float, now: Optional[datetime] = None)
     return out
 
 
-def calibrate(projects: List[Dict[str, Any]], outcomes: Dict[str, bool]) -> Dict[str, Any]:
+def calibrate(projects: List[Dict[str, Any]], outcomes: Dict[str, bool], key=lambda p: p["name"]) -> Dict[str, Any]:
     """Reliability check once outcomes exist: bucket predicted scores, compare to realised build rates.
 
     `outcomes` maps project name → True (built / live) / False (cancelled). Returns per-bucket
     predicted vs observed rates and the Brier score — the test of whether "0.8 means 80%".
     """
-    pairs = [(p["reality_score"], outcomes[p["name"]]) for p in projects if p["name"] in outcomes]
+    pairs = [(p["reality_score"], outcomes[key(p)]) for p in projects if key(p) in outcomes]
     if not pairs:
         return {"n": 0}
     buckets = {}

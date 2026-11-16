@@ -1,0 +1,78 @@
+{
+  "priors": {
+    "0": 0.191,
+    "1": 0.4,
+    "2": 0.5,
+    "3": 0.6,
+    "4": 0.92,
+    "5": 0.988
+  },
+  "assumed": {
+    "0": 0.25,
+    "1": 0.4,
+    "2": 0.5,
+    "3": 0.75,
+    "4": 0.88,
+    "5": 0.98
+  },
+  "layers": [
+    {
+      "layer": "ANNOUNCED",
+      "assumed": 0.25,
+      "n": 95,
+      "progressed": 17,
+      "observed": 0.179,
+      "fitted": 0.191
+    },
+    {
+      "layer": "SITE",
+      "assumed": 0.4,
+      "n": 5,
+      "progressed": 2,
+      "observed": 0.4,
+      "fitted": 0.4
+    },
+    {
+      "layer": "APPROVED",
+      "assumed": 0.5,
+      "n": 0,
+      "progressed": 0,
+      "observed": null,
+      "fitted": 0.5
+    },
+    {
+      "layer": "POWER",
+      "assumed": 0.75,
+      "n": 5,
+      "progressed": 0,
+      "observed": 0.0,
+      "fitted": 0.6
+    },
+    {
+      "layer": "BUILDING",
+      "assumed": 0.88,
+      "n": 10,
+      "progressed": 10,
+      "observed": 1.0,
+      "fitted": 0.92
+    },
+    {
+      "layer": "LIVE",
+      "assumed": 0.98,
+      "n": 14,
+      "progressed": 14,
+      "observed": 1.0,
+      "fitted": 0.988
+    }
+  ],
+  "cases": 129,
+  "projects": 58,
+  "cutoffs": [
+    "2022-06-30",
+    "2023-06-30",
+    "2024-06-30"
+  ],
+  "shrink": 20,
+  "fitted_on": "2026-11-15",
+  "method": "Beta-binomial shrinkage towards the stated priors, monotone in the evidence ladder; outcome = verified BUILDING or LIVE evidence after the cutoff"
+}

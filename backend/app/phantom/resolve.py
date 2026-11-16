@@ -123,19 +123,32 @@ def _strip_place(core: str, place: Optional[str]) -> str:
     return " ".join(w for w in core.split() if w not in pw)
 
 
+FOREIGN_CODES = {"LHR", "LON", "LD", "FRA", "FR", "PAR", "AMS", "DUB", "MAD", "MIL", "TY", "TYO", "NRT", "OSA", "SEL", "ICN", "SG", "SIN", "HK", "HKG",
+                 "SYD", "MEL", "JKT", "CGK", "BKK", "MNL", "IAD", "DFW", "PHX", "SJC", "ORD", "ATL", "NYC"}
+
+
+def _place_fits(a: str, b: str) -> bool:
+    """Same place, or one is only a state and the other a city inside it ("Andhra Pradesh" ↔ Visakhapatnam)."""
+    if a == b:
+        return True
+    from app.phantom.geo import PLACES, STATES
+    return (a in STATES or b in STATES) and a in PLACES and b in PLACES and PLACES[a][0] == PLACES[b][0]
+
+
 def _same(m: Dict[str, Any], c: Dict[str, Any]) -> bool:
     if m["code"] and m["code"] in c["codes"]:
         return True
     if m["code"] and c["codes"] and m["code"] not in c["codes"]:
         return False  # two different facility codes are two different buildings
-    if m["place"] and c["places"] and m["place"] not in c["places"]:
+    here = bool(m["place"]) and any(_place_fits(m["place"], x) for x in c["places"])
+    if m["place"] and c["places"] and not here:
         return False
     if not any(_cap_compatible(m["cap"], x) for x in c["caps"] or [None]):
         return False
-    if m["place"] and m["place"] in c["places"] and m["cap"] and any(x and _cap_compatible(m["cap"], x) for x in c["caps"]):
+    if here and m["cap"] and any(x and _cap_compatible(m["cap"], x) for x in c["caps"]):
         return True  # same developer, same place, same stated size: one campus however the article named it
     if not m["core"] or not c["cores"]:
-        if m["place"] and m["place"] in c["places"]:
+        if here:
             return True  # e.g. "AirTrunk Johor" twice
         # no name and no conflicting place: same developer + same stated capacity (±10%) is the same campus
         return bool(m["cap"]) and any(x and max(m["cap"], x) / min(m["cap"], x) <= 1.10 for x in c["caps"])
@@ -144,12 +157,12 @@ def _same(m: Dict[str, Any], c: Dict[str, Any]) -> bool:
 
 def resolve(mentions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """mentions: [{"id", "data", "published", "article_id", "text_kind"}] → clusters with canonical fields."""
-    from app.phantom.extract import NON_FACILITY
+    from app.phantom.extract import MANY_SITES, NON_FACILITY
     prepared = []
     for row in mentions:
         d = row["data"]
-        if NON_FACILITY.search(d.get("project_name") or ""):
-            continue  # a deal / supply contract, not a facility
+        if NON_FACILITY.search(d.get("project_name") or "") or MANY_SITES.search(d.get("project_name") or ""):
+            continue  # a deal / supply contract / multi-site programme, not a facility
         from app.phantom.geo import _OTHER
         if _OTHER.search(d.get("project_name") or ""):
             continue  # the name itself places it outside India / Malaysia ("DayOne Nurmijärvi")
@@ -195,7 +208,16 @@ def resolve(mentions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             target["cores"].append(m["core"])
     # A project needs something that tells it apart from the developer's other sites: a place, a size or a
     # facility code. "AdaniConneX data centre" with none of these is talk about the developer, not a project.
-    return [canonicalise(c) for c in clusters if c["places"] or c["caps"] or c["codes"]]
+    # A project with NO place and no code is only kept when (a) it has a size and a name of its own — "Nxtra, 1 GW" is a
+    # company target — and (b) its country comes from the mention's own words. A country borrowed from the article as a
+    # whole is how "related stories" about Tokyo or Texas ended up filed under India.
+    def keep(c: Dict[str, Any]) -> bool:
+        if c["places"]:
+            return True
+        if c["codes"]:   # operators number sites by airport / city code: LHR2 is London, TY1 Tokyo, SG1 Singapore
+            return not all(re.match(r"[A-Z]+", x).group(0) in FOREIGN_CODES for x in c["codes"])
+        return bool(c["caps"]) and any(c["cores"]) and any(m["data"].get("_country_from", "mention") == "mention" for m in c["members"])
+    return [canonicalise(c) for c in clusters if keep(c)]
 
 
 # ── Subject check: is this quote about *this* project? ──
@@ -252,9 +274,15 @@ def about_project(quote: Optional[str], code: Optional[str], place: Optional[str
     if code and codes and code not in codes:
         return False  # names another building
     if place in PLACES:
-        areas = {_area(x) for x in _places_in(q)}
-        if areas and _area(place) not in areas:
-            return False  # names somewhere else only (another state, or another Indian city)
+        from app.phantom.geo import STATES
+        named = _places_in(q)
+        if place in STATES:      # the project is only known to state level: any city in that state is consistent
+            if named and PLACES[place][0] not in {PLACES[x][0] for x in named}:
+                return False
+        else:
+            areas = {_area(x) for x in named}
+            if areas and _area(place) not in areas:
+                return False  # names somewhere else only (another state, or another Indian city)
     return True
 
 
@@ -293,21 +321,37 @@ def canonicalise(c: Dict[str, Any]) -> Dict[str, Any]:
     years = [(m["published"], m["data"].get("target_year")) for m in ms if m["data"].get("target_year")]
     latest_year = sorted(years, key=lambda x: (x[0] is None, x[0] or 0))[-1][1] if years else None
     pick = lambda f: next((m["data"].get(f) for m in reversed(ms) if m["data"].get(f)), None)  # noqa: E731
-    place = Counter(m["place"] for m in ms if m["place"]).most_common(1)
+    from app.phantom.geo import STATES
+    place = (Counter(m["place"] for m in ms if m["place"] and m["place"] not in STATES).most_common(1)   # a city beats a bare state
+             or Counter(m["place"] for m in ms if m["place"]).most_common(1))
+    place_name = place[0][0] if place else None
+    one_code = next(iter(c["codes"]), None) if len(c["codes"]) == 1 else None
+    events = [{**e, "article_id": m["article_id"], "published": m["published"]} for m in ms for e in m["data"].get("events") or []
+              if about_project(e.get("quote"), m["code"] or one_code, place_name, c["dev"], e.get("layer"))]
+    # Power forensics: the miner's facts, through the same subject check as the evidence
+    from app.phantom import power as P
+    from app.phantom.score import stage_of
+    facts, seen_facts = [], set()
+    for m in ms:
+        for f in P.project_facts(m["data"].get("power_facts") or [], c["dev"], m["code"] or one_code, place_name):
+            if (f["field"], f["value"]) not in seen_facts:
+                seen_facts.add((f["field"], f["value"]))
+                facts.append({**f, "article_id": str(m["article_id"]), "published": m["published"].isoformat() if m["published"] else None})
+    power = P.dossier(facts, stage_of(events), [e for e in events if e.get("layer") == "POWER"])
     return {
         "name": name[:300], "developer": c["dev"], "country": c["country"],
         "place": place[0][0] if place else None,
         "capacity_mw": best_cap.get("capacity_mw"), "capacity_basis": best_cap.get("capacity_basis") or ("unknown" if best_cap else None),
         "capacities": [{"mw": m["data"]["capacity_mw"], "basis": m["data"].get("capacity_basis"), "published": m["published"], "article_id": m["article_id"]} for m in capped],
         "target_year": latest_year, "target_years": years,
-        "power_partner": pick("power_partner") or power_partner_from_evidence(
-            e for m in ms for e in m["data"].get("events") or [] if e.get("layer") == "POWER"), "power_source": pick("power_source"), "cooling": pick("cooling"),
+        "power_partner": pick("power_partner") or power_partner_from_evidence(e for e in events if e.get("layer") == "POWER")
+                         or next((f["value"] for f in facts if f["field"] == "utility" and not f["planned"]), None),
+        "power_source": pick("power_source"), "cooling": pick("cooling") or (", ".join(power["cooling"][:2]) or None),
+        "power": power,
         "ai_density": any(m["data"].get("ai_density") for m in ms),
         "mention_ids": [m["id"] for m in ms], "article_ids": list(dict.fromkeys(m["article_id"] for m in ms)),
         "text_kinds": [m.get("text_kind") for m in ms],
-        "events": [{**e, "article_id": m["article_id"], "published": m["published"]} for m in ms for e in m["data"].get("events") or []
-                   if about_project(e.get("quote"), m["code"] or next(iter(c["codes"]), None) if len(c["codes"]) == 1 else m["code"],
-                                    place[0][0] if place else None, c["dev"], e.get("layer"))],
+        "events": events,
         "first_seen": min((m["published"] for m in ms if m["published"]), default=None),
         "last_seen": max((m["published"] for m in ms if m["published"]), default=None),
     }

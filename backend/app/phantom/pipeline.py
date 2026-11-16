@@ -29,6 +29,7 @@ from app.phantom import score as S
 from app.phantom.extract import MAX_CHARS, extract_article, gazetteer_developer, mine_evidence, project_sentences, upgrade_events
 from app.phantom.geo import coords, infer_country, resolve_place
 from app.phantom.models import PhAnomaly, PhArticle, PhEvidence, PhMention, PhProject, PhRun
+from app.phantom.power import drop_shared, mine_power
 from app.phantom.resolve import resolve
 from app.phantom.verify import event_fits, norm, quote_found
 from app.phantom.sources import REGIONS, fetch_all, search, seed_queries
@@ -64,14 +65,26 @@ def _load_mentions(db) -> List[Dict[str, Any]]:
         llm_events = llm_events + upgrade_events(llm_events)
         d["events"] = llm_events + mine_evidence({**d, "events": llm_events}, body)
         d["context"] = project_sentences(d, body)[:3]
+        d["power_facts"] = mine_power(d, body)   # deterministic, re-mined on every rebuild like the evidence
         # the mention's own place first, then the article as a whole
-        inferred = infer_country(d.get("city"), d.get("state"), d.get("project_name"), *(d.get("context") or [])) \
-            or infer_country(a.title, (a.text or "")[:3000])
+        own = infer_country(d.get("city"), d.get("state"), d.get("project_name"), *(d.get("context") or []))
+        d["_country_from"] = "mention" if own else "article"
+        inferred = own or infer_country(a.title, (a.text or "")[:3000])
         if inferred:
             d["country"] = inferred  # trust evidence over the model's guess (it said "Indonesia" for Jakarta correctly too)
         elif d.get("country") not in {r["country"] for r in REGIONS.values()}:
             d["country"] = d.get("country")  # out of scope — dropped later
         out.append({"id": m.id, "data": d, "published": a.published_at, "article_id": a.id, "text_kind": a.text_kind})
+    # one article, several projects: a power sentence credited to more than one of them is kept only where it points
+    by_article: Dict[Any, List[Dict[str, Any]]] = {}
+    for row in out:
+        if not row["data"].get("_frozen"):
+            by_article.setdefault(row["article_id"], []).append(row)
+    for rows_ in by_article.values():
+        if len(rows_) > 1:
+            kept = drop_shared([r["data"].get("power_facts") or [] for r in rows_], [r["data"] for r in rows_])
+            for r, facts in zip(rows_, kept):
+                r["data"]["power_facts"] = facts
     return out
 
 
@@ -105,6 +118,7 @@ def rebuild_projects() -> Dict[str, Any]:
                 id=stable_id, name=c["name"], developer=c["developer"], city=place, state=state, country=c["country"], lat=lat, lon=lon,
                 capacity_mw=c["capacity_mw"], capacity_basis=c["capacity_basis"], target_year=c["target_year"],
                 power_partner=c["power_partner"], power_source=c["power_source"], cooling=c["cooling"], ai_density=c["ai_density"],
+                power=c.get("power"),
                 stage=stage, reality_score=reality, score_breakdown=breakdown,
                 weakest_assumption=f"{weak['assumption']} (would lift the score by {round(weak['uplift'] * 100)} pts)" if weak["uplift"] else weak["assumption"],
                 call_segments=S.who_to_call(c, reality, now), n_sources=len(c["article_ids"]),
