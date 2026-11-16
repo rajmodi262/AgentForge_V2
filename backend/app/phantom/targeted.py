@@ -96,7 +96,49 @@ def outcome_queries() -> Dict[str, List[str]]:
     return {k: list(dict.fromkeys(v)) for k, v in out.items()}
 
 
-JOBS = {"gaps": gap_queries, "official": official_queries, "outcomes": outcome_queries}
+HISTORY_YEARS = range(2019, 2024)
+
+
+def history_queries() -> Dict[str, List[str]]:
+    """Older announcements (2019–2023), so the backtest has more projects old enough to judge.
+    Free feeds only: Google News takes a date range (`after:` / `before:`); Bing gets the year as a word."""
+    from collections import Counter
+    from app.database import SessionLocal
+    from app.phantom.models import PhProject
+    from app.phantom.sources import REGIONS
+    db = SessionLocal()
+    try:
+        seen = Counter((p.country, p.developer) for p in db.query(PhProject).all() if p.developer)
+    finally:
+        db.close()
+    out: Dict[str, List[str]] = {}
+    for region, cfg in REGIONS.items():
+        devs = list(dict.fromkeys([d for (c, d), _ in seen.most_common() if c == cfg["country"]][:22] + cfg["developers"]))
+        qs = []
+        for y in HISTORY_YEARS:
+            span = f"after:{y}-01-01 before:{y}-12-31"
+            qs += [f"{d} data centre {span}" for d in devs]
+            qs += [f"data centre {pl} MW {span}" for pl in cfg["places"]]
+            qs += [f"{d} data centre {cfg['country']} {y}" for d in devs[:12]]          # Bing: full text where the publisher allows it
+            qs += [f"hyperscale data centre {pl} {y} MW" for pl in cfg["places"][:5]]
+        out[region] = list(dict.fromkeys(qs))
+    return out
+
+
+async def _search_free(qs: List[str], region: str, chunk: int = 10, pause: float = 2.0) -> list:
+    """Dated queries go to Google News, the rest to Bing News; in small paced batches so neither feed throttles us."""
+    items, seen = [], set()
+    for feed, group in (("google", [q for q in qs if "after:" in q]), ("bing", [q for q in qs if "after:" not in q])):
+        for i in range(0, len(group), chunk):
+            for it in await search(group[i:i + chunk], region, feeds=(feed,)):
+                if it.url not in seen:
+                    seen.add(it.url)
+                    items.append(it)
+            await asyncio.sleep(pause)
+    return items
+
+
+JOBS = {"gaps": gap_queries, "official": official_queries, "outcomes": outcome_queries, "history": history_queries}
 
 
 async def run(job: str, budget: int) -> Dict:
@@ -105,7 +147,7 @@ async def run(job: str, budget: int) -> Dict:
     stats = {"job": job, "queries": sum(len(v) for v in queries.values()), "found": 0, "relevant": 0, "full_text": 0, "new": 0}
     for region, qs in queries.items():
         try:
-            items = await search(qs, region, feeds=("firecrawl",))
+            items = await _search_free(qs, region) if job == "history" else await search(qs, region, feeds=("firecrawl",))
         except firecrawl.BudgetExceeded:
             items = []
         items = [replace(i, feed=job) for i in items]
@@ -133,7 +175,7 @@ def main(argv: List[str]) -> None:
             for q in qs[:8]:
                 print("  ", q)
         return
-    if not firecrawl.enabled():
+    if job != "history" and not firecrawl.enabled():
         sys.exit("FIRECRAWL_API_KEY is not set in backend/.env")
     budget = int(argv[argv.index("--budget") + 1]) if "--budget" in argv else 120
     print(asyncio.run(run(job, budget)))

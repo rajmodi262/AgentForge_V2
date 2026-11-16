@@ -129,6 +129,74 @@ def power(country: Optional[str] = None, db: Session = Depends(get_db)):
             "note": "NO_EVIDENCE means nothing was found in public sources — not proof that no agreement exists."}
 
 
+@router.get("/model")
+def model(db: Session = Depends(get_db)):
+    """Everything the what-if panel needs to re-score the whole portfolio in the browser:
+    the prior table (stated and fitted), every adjustment weight, and which adjustments apply to each project.
+    score = sigmoid(logit(prior[stage]) + sum(weights[term])) — the same formula as score.reality."""
+    from app.phantom import score as S
+    by_label = {v.lower(): k for k, v in S.WEIGHT_LABELS.items()}
+
+    def key(b):
+        if b.get("key"):
+            return b["key"]
+        t = (b.get("term") or "").lower()          # rows scored before terms carried keys
+        if t.startswith("evidence layer"):
+            return "prior"
+        if "independent sources" in t:
+            return "multi_source"
+        if t.startswith("named power partner"):
+            return "power_partner"
+        if t.startswith("gone quiet"):
+            return "gone_quiet"
+        return by_label.get(t, t.replace(" ", "_").replace("-", "_"))
+
+    rows = []
+    for p in db.query(PhProject).all():
+        terms = [key(b) for b in p.score_breakdown or []]
+        rows.append({"id": str(p.id), "name": p.name, "developer": p.developer, "country": p.country, "state": p.state,
+                     "capacity_mw": p.capacity_mw, "stage": p.stage or 0, "cancelled": "cancelled" in terms,
+                     "terms": [t for t in terms if t in S.WEIGHTS], "score": p.reality_score})
+    return {"layers": LAYERS, "priors": {"stated": [S.PRIOR_ASSUMED[i] for i in range(6)], "active": [S.PRIOR[i] for i in range(6)],
+                                         "fitted": [S.CALIBRATION["priors"][i] for i in range(6)] if S.CALIBRATION else None},
+            "calibration": {k: v for k, v in (S.CALIBRATION or {}).items() if k in ("cases", "projects", "cutoffs", "fitted_on", "shrink", "layers")} or None,
+            "weights": S.WEIGHTS, "weight_labels": S.WEIGHT_LABELS, "projects": rows}
+
+
+@router.get("/timeline")
+def timeline(db: Session = Depends(get_db)):
+    """Every project with the date it was first reported and the date each evidence layer was first verified —
+    enough for the browser to redraw the map as of any day."""
+    first: dict = {}
+    for e in db.query(PhEvidence).all():
+        if e.event_date and e.layer in LAYERS:
+            k = (e.project_id, e.layer)
+            if k not in first or e.event_date < first[k]:
+                first[k] = e.event_date
+    rows, dates = [], []
+    for p in db.query(PhProject).all():
+        ev = sorted(({"layer": l, "date": d.date().isoformat()} for (pid, l), d in first.items() if pid == p.id), key=lambda x: x["date"])
+        start = p.first_seen.date().isoformat() if p.first_seen else (ev[0]["date"] if ev else None)
+        if not start:
+            continue
+        dates.append(start)
+        rows.append({"id": str(p.id), "name": p.name, "developer": p.developer, "country": p.country, "city": p.city, "lat": p.lat, "lon": p.lon,
+                     "capacity_mw": p.capacity_mw, "first_seen": start, "events": ev, "stage": p.stage or 0, "reality_score": p.reality_score,
+                     "grid_position": (p.power or {}).get("grid_position", "NO_EVIDENCE")})
+    return {"projects": rows, "from": min(dates) if dates else None, "to": max((e["date"] for r in rows for e in r["events"]), default=None),
+            "undated": db.query(PhProject).count() - len(rows)}
+
+
+@router.get("/backtest")
+def backtest():
+    """The cached calibration backtest (python -m app.phantom.backtest --cache): cases, reliability tables, baselines, fitted priors."""
+    import json
+    from app.phantom.backtest import CACHE_FILE
+    if not CACHE_FILE.exists():
+        raise HTTPException(404, "No backtest has been cached yet — run: python -m app.phantom.backtest --cache")
+    return json.loads(CACHE_FILE.read_text(encoding="utf-8"))
+
+
 @router.get("/developers")
 def developers(min_projects: int = Query(1, ge=1), limit: int = Query(50, le=300), db: Session = Depends(get_db)):
     """Track record per developer: how much of what they announced reached construction, and how fast."""

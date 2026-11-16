@@ -8,9 +8,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
-import RealityGlobe from '../components/RealityGlobe';
+import RealityGlobe, { type GlobeItem } from '../components/RealityGlobe';
+import { PhantomNav } from '../components/phantomUi';
 import { colors, radii, typography } from '../styles/tokens';
-import { phantom, fmtMW, scoreColor, STAGE_COLORS, WS_BASE, type PhProject, type Summary, type ChatAnswer, type Signal } from '../services/phantom';
+import { phantom, lab, fmtMW, pct, scoreColor, STAGE_COLORS, GRID_COLORS, GRID_ORDER, WS_BASE, type PhProject, type PowerProject, type PowerHeadline, type Summary, type ChatAnswer, type Signal } from '../services/phantom';
 
 const card: React.CSSProperties = { background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: radii.lg, padding: '1.25rem' };
 const mono = "'JetBrains Mono', monospace";
@@ -57,6 +58,8 @@ export default function PhantomHunter() {
   const [signals, setSignals] = useState<Signal[]>([]);
   const [alerts, setAlerts] = useState<{ project_id: string; project: string; kind: string; severity: string; message: string }[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
+  const [power, setPower] = useState<PowerHeadline | null>(null);
+  const [colorBy, setColorBy] = useState<'score' | 'grid'>('score');
 
   const load = useCallback(async () => {
     try {
@@ -69,6 +72,7 @@ export default function PhantomHunter() {
   useEffect(() => { phantom.whoToCall(segment).then((r) => setCalls(r.projects)).catch(() => setCalls([])); }, [segment, summary]);
   useEffect(() => { phantom.signals().then((r) => { setSignals(r.signals); setAlerts(r.anomalies); }).catch(() => undefined); }, [summary]);
   useEffect(() => () => wsRef.current?.close(), []);
+  useEffect(() => { lab.power(country).then((r) => setPower(r.headline)).catch(() => setPower(null)); }, [country, summary]);
 
   const startHunt = async (region: string) => {
     try {
@@ -100,6 +104,7 @@ export default function PhantomHunter() {
   return (
     <DashboardLayout>
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+        <PhantomNav />
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 20 }}>
           <div>
@@ -133,6 +138,9 @@ export default function PhantomHunter() {
             <Stat label="ANNOUNCED CAPACITY" value={fmtMW(summary.announced_mw)} sub={`${summary.projects} projects resolved`} />
             <Stat label="REALITY-WEIGHTED" value={fmtMW(summary.reality_mw)} sub={`${Math.round(pctReal * 100)}% of announced`} color={colors.emerald} />
             <Stat label="PHANTOM CAPACITY" value={fmtMW(phantomMw)} sub="announced × (1 − reality score)" color="#c4b5fd" />
+            {power && <div onClick={() => nav('/phantom/power')} style={{ display: 'flex', flex: 1, minWidth: 180, cursor: 'pointer' }} title="Open power forensics">
+              <Stat label="SECURED GRID POSITION →" value={pct(power.secured_share)} sub={`${fmtMW(power.secured_mw)} operating or with a signed supply agreement`} color="#22d3ee" />
+            </div>}
             <Stat label="CLAIMS VERIFIED" value={summary.claims_verified_pct != null ? `${summary.claims_verified_pct}%` : '—'} sub={`${summary.mentions} mentions from ${summary.articles.extracted} articles read`} color={colors.secondary} />
           </div>
         )}
@@ -142,11 +150,21 @@ export default function PhantomHunter() {
           <div style={card}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <div style={{ fontWeight: 600 }}>🌏 Reality Globe</div>
+              <div style={{ display: 'inline-flex', border: `1px solid ${colors.border}`, borderRadius: 8, overflow: 'hidden', marginLeft: 'auto', marginRight: 8 }}>
+                {([['score', 'Reality score'], ['grid', 'Grid position']] as const).map(([k, label]) => (
+                  <button key={k} onClick={() => setColorBy(k)} aria-pressed={colorBy === k} style={{ padding: '4px 10px', border: 'none', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit', color: colorBy === k ? '#fff' : colors.textMuted, background: colorBy === k ? 'rgba(124,58,237,0.35)' : 'transparent' }}>{label}</button>
+                ))}
+              </div>
               <select value={country} onChange={(e) => setCountry(e.target.value)} style={{ background: colors.bgInput, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '4px 8px' }}>
                 <option value="">All countries</option><option>India</option><option>Malaysia</option>
               </select>
             </div>
-            <RealityGlobe projects={projects} onPick={(id) => nav(`/phantom/${id}`)} />
+            <RealityGlobe projects={projects} onPick={(id) => nav(`/phantom/${id}`)} look={colorBy === 'grid' ? {
+              colorOf: (p: GlobeItem) => GRID_COLORS[(p as PowerProject).grid_position || 'NO_EVIDENCE'],
+              fillOf: (p: GlobeItem) => ((p as PowerProject).power?.secured ? 1 : (p as PowerProject).grid_position === 'NO_EVIDENCE' ? 0.06 : 0.45),
+              detailOf: (p: GlobeItem) => (p as PowerProject).grid_label || 'no public evidence of power',
+              legend: <>{GRID_ORDER.filter((k) => k !== 'APPLIED').map((k) => <span key={k} style={{ marginRight: 12 }}><span style={{ color: GRID_COLORS[k] }}>■</span> {k.replace(/_/g, ' ').toLowerCase()}</span>)}</>,
+            } : undefined} />
           </div>
           <div style={card}>
             <div style={{ fontWeight: 600, marginBottom: 4 }}>📞 Who to call this month</div>
@@ -296,7 +314,7 @@ export default function PhantomHunter() {
             ))}
           </div>
           <div style={{ fontSize: 12, color: colors.textDim, marginTop: 10 }}>
-            "Power" means secured — a PPA, grid connection or substation — never just a mention of power. Scores are stated priors anchored to public market data, not yet calibrated against outcomes.
+            "Power" means secured — a PPA, grid connection or substation — never just a mention of power. The starting probabilities are fitted from a backtest and tested out of sample: it validates the score for ruling projects out, not yet for picking winners (see the Calibration lab).
           </div>
         </div>
 
