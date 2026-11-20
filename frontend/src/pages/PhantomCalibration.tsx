@@ -111,11 +111,18 @@ export default function PhantomCalibration() {
 
         {/* Verdict */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14, marginBottom: 16 }}>
-          <div style={{ ...card, borderColor: 'rgba(16,185,129,0.4)', background: 'rgba(16,185,129,0.05)' }}>
-            <div style={{ fontFamily: mono, fontSize: 11, color: colors.emerald, letterSpacing: '0.12em' }}>✓ AS A FILTER</div>
-            <div style={{ fontFamily: display, fontSize: '2.1rem', fontWeight: 700, marginTop: 4 }}>{pct(e.phantom_calls.accuracy)}</div>
-            <div style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.55 }}>of {e.phantom_calls.n} projects called phantom risk (below {pct(bt.bands.phantom)}) showed no verified progress afterwards.</div>
-          </div>
+          {(() => {
+            // the fair bar: how often a project in this set showed no progress anyway
+            const chance = 1 - e.base_rate, lift = (e.phantom_calls.accuracy ?? 0) - chance, good = lift > 0.03;
+            const c = good ? colors.emerald : colors.amber;
+            return (
+              <div style={{ ...card, borderColor: `${c}66`, background: `${c}0d` }}>
+                <div style={{ fontFamily: mono, fontSize: 11, color: c, letterSpacing: '0.12em' }}>{good ? '✓' : '≈'} PHANTOM CALLS</div>
+                <div style={{ fontFamily: display, fontSize: '2.1rem', fontWeight: 700, marginTop: 4 }}>{pct(e.phantom_calls.accuracy)} <span style={{ fontSize: '1rem', color: colors.textDim, fontWeight: 400 }}>vs {pct(chance)} by chance</span></div>
+                <div style={{ fontSize: 13, color: colors.textMuted, lineHeight: 1.55 }}>of {e.phantom_calls.n} projects called phantom risk showed no verified progress — but {pct(chance)} of every project in this set showed none. {good ? 'Better than calling them all phantoms.' : 'No better than calling them all phantoms.'}</div>
+              </div>
+            );
+          })()}
           <div style={{ ...card, borderColor: 'rgba(245,158,11,0.4)', background: 'rgba(245,158,11,0.05)' }}>
             <div style={{ fontFamily: mono, fontSize: 11, color: colors.amber, letterSpacing: '0.12em' }}>⚠ AS A FORECAST OF WINNERS</div>
             <div style={{ fontFamily: display, fontSize: '2.1rem', fontWeight: 700, marginTop: 4 }}>{e.likely_calls.n ? `${e.likely_calls.right} of ${e.likely_calls.n}` : 'untested'}</div>

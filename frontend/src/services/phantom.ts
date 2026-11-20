@@ -146,3 +146,20 @@ export const GRID_COLORS: Record<GridPosition, string> = {
 };
 export const GRID_ORDER: GridPosition[] = ['ENERGIZED', 'AGREEMENT', 'POWER_DEAL', 'UNDER_CONSTRUCTION', 'APPLIED', 'NO_EVIDENCE'];
 export const pct = (x: number | null | undefined, digits = 0) => (x == null ? '—' : `${(x * 100).toFixed(digits)}%`);
+
+// ───────────── Workbench: merge review, import, investigator ─────────────
+export interface ReviewProject { id: string; anchor: string; name: string; developer: string | null; country: string | null; city: string | null; capacity_mw: number | null; stage: number; reality_score: number; n_sources: number; first_seen: string | null }
+export interface MergeCandidate { a: ReviewProject; b: ReviewProject; score: number; reasons: string[]; kind: 'same_developer' | 'cross_developer'; double_counted_mw: number | null }
+export interface ImportRow {
+  row: number; name: string; developer: string | null; city: string | null; country: string | null; capacity_mw: number | null; matched: boolean; why: string[];
+  confidence?: number; project_id?: string; project?: string; reality_score?: number; stage?: number; grid_position?: GridPosition; weakest_assumption?: string; n_sources?: number; in_scope?: boolean;
+}
+export interface ImportResult { rows: ImportRow[]; summary: { rows: number; matched: number; unmatched: number; announced_mw: number; matched_mw: number; reality_mw: number } }
+export interface TraceStep { step: number; thought: string; action: string; result: unknown }
+
+export const bench = {
+  candidates: () => get<{ candidates: MergeCandidate[]; decided: { a: ReviewProject; b: ReviewProject; decision: string }[]; double_counted_mw: number; note: string }>('/merge-candidates'),
+  decide: (a: string, b: string, decision: 'merge' | 'distinct') => post<{ decision: string; rebuilt: Record<string, number> | null }>('/merge-decisions', { a, b, decision }),
+  importCsv: (csv: string) => post<ImportResult>('/import', { csv }),
+  investigate: (id: string) => post<{ run_id: string; websocket_url: string }>(`/projects/${id}/investigate`),
+};

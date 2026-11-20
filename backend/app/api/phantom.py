@@ -129,6 +129,54 @@ def power(country: Optional[str] = None, db: Session = Depends(get_db)):
             "note": "NO_EVIDENCE means nothing was found in public sources — not proof that no agreement exists."}
 
 
+@router.get("/merge-candidates")
+def merge_candidates(limit: int = Query(40, le=200), db: Session = Depends(get_db)):
+    """Pairs of projects that look like the same site but were kept apart — for a person to settle."""
+    from app.phantom import merge as M
+    decided = M.load_decisions(db)
+    projects = M.projects_for_review(db)
+    cands = M.candidates(projects, decided, limit)
+    by_anchor = {p["anchor"]: p for p in projects if p["anchor"]}
+    history = [{"a": by_anchor.get(a, {"anchor": a, "name": "(merged away)"}), "b": by_anchor.get(b, {"anchor": b, "name": "(merged away)"}), "decision": d}
+               for (a, b), d in decided.items()]
+    return {"candidates": cands, "decided": history, "double_counted_mw": round(sum(c["double_counted_mw"] or 0 for c in cands if c["score"] >= 0.8), 1),
+            "note": "A merge is applied on the next rebuild and can be changed at any time."}
+
+
+class MergeBody(BaseModel):
+    a: str = Field(..., min_length=32, max_length=40)
+    b: str = Field(..., min_length=32, max_length=40)
+    decision: str = Field(..., pattern="^(merge|distinct)$")
+
+
+@router.post("/merge-decisions")
+async def merge_decision(body: MergeBody, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Record one human decision and rebuild, so the tracker reflects it straight away."""
+    from app.phantom import merge as M
+    from app.phantom.pipeline import rebuild_projects
+    try:
+        saved = M.decide(db, body.a, body.b, body.decision, getattr(user, "email", None))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    res = await asyncio.to_thread(rebuild_projects) if body.decision == M.MERGE else None
+    return {**saved, "rebuilt": res}
+
+
+class ImportBody(BaseModel):
+    csv: str = Field(..., min_length=5, max_length=2_000_000)
+
+
+@router.post("/import")
+def import_list(body: ImportBody, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Score someone else's project list: match each row to a tracked project and return its reality layer."""
+    from app.phantom import importer as I
+    try:
+        rows = I.parse(body.csv)
+    except (ValueError, Exception) as e:   # malformed CSV is the caller's problem, not a 500
+        raise HTTPException(400, f"Could not read the CSV: {e}")
+    return I.match(rows, I.tracked_from_db(db))
+
+
 @router.get("/model")
 def model(db: Session = Depends(get_db)):
     """Everything the what-if panel needs to re-score the whole portfolio in the browser:
@@ -301,6 +349,21 @@ async def start_hunt(body: HuntBody, background: BackgroundTasks, db: Session = 
     db.add(run)
     db.commit()
     background.add_task(run_hunt, str(run.id), body.region, body.max_rounds)
+    return {"run_id": str(run.id), "websocket_url": f"/api/v1/ws/hunt-{run.id}"}
+
+
+@router.post("/projects/{project_id}/investigate")
+async def investigate(project_id: UUID, background: BackgroundTasks, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Send the Investigator after this project's weakest assumption. Streams its steps over the websocket."""
+    from app.phantom.investigate import run as run_investigation
+    if not db.query(PhProject).filter(PhProject.id == project_id).first():
+        raise HTTPException(404, "Project not found")
+    if db.query(PhRun).filter(PhRun.status == "running").count():
+        raise HTTPException(409, "A hunt or investigation is already running")
+    run = PhRun(region=f"investigate:{project_id}", status="running", stats={}, log=[])
+    db.add(run)
+    db.commit()
+    background.add_task(run_investigation, str(run.id), str(project_id))
     return {"run_id": str(run.id), "websocket_url": f"/api/v1/ws/hunt-{run.id}"}
 
 

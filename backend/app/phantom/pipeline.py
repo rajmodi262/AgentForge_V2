@@ -93,7 +93,8 @@ def rebuild_projects() -> Dict[str, Any]:
     db = SessionLocal()
     try:
         mentions = _load_mentions(db)
-        clusters = resolve(mentions)
+        from app.phantom.merge import load_decisions
+        clusters = resolve(mentions, load_decisions(db))
         old_debates = {p.name: p.debate for p in db.query(PhProject).filter(PhProject.debate != None).all()}  # noqa: E711
         db.query(PhAnomaly).delete(); db.query(PhEvidence).delete()
         db.query(PhMention).update({PhMention.project_id: None})

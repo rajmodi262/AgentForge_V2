@@ -12,6 +12,7 @@ import { colors, radii } from '../styles/tokens';
 import { phantom, fmtMW, scoreColor, STAGE_COLORS, type ProjectDetail } from '../services/phantom';
 import { ScorePill, StagePill } from './PhantomHunter';
 import PowerCard from '../components/PowerCard';
+import InvestigatorCard from '../components/InvestigatorCard';
 
 const card: React.CSSProperties = { background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: radii.lg, padding: '1.25rem' };
 const mono = "'JetBrains Mono', monospace";
@@ -100,6 +101,8 @@ export default function PhantomProject() {
             })}
           </div>
         </div>
+
+        <InvestigatorCard projectId={p.id} weakest={p.weakest_assumption} onDone={() => id && phantom.project(id).then(setP).catch(() => undefined)} />
 
         <PowerCard power={p.power} facts={p.power_facts} capacityMw={p.capacity_mw} partner={p.power_partner} />
 

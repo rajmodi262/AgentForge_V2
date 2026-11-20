@@ -21,6 +21,7 @@ import PhantomPower from './pages/PhantomPower';
 import PhantomTime from './pages/PhantomTime';
 import PhantomWhatIf from './pages/PhantomWhatIf';
 import PhantomCalibration from './pages/PhantomCalibration';
+import PhantomWorkbench from './pages/PhantomWorkbench';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -79,6 +80,7 @@ export default function App() {
               <Route path="/phantom/time" element={<ProtectedRoute><PhantomTime /></ProtectedRoute>} />
               <Route path="/phantom/what-if" element={<ProtectedRoute><PhantomWhatIf /></ProtectedRoute>} />
               <Route path="/phantom/calibration" element={<ProtectedRoute><PhantomCalibration /></ProtectedRoute>} />
+              <Route path="/phantom/workbench" element={<ProtectedRoute><PhantomWorkbench /></ProtectedRoute>} />
               <Route path="/phantom/:id" element={
                 <ProtectedRoute><PhantomProject /></ProtectedRoute>
               } />

@@ -15,6 +15,7 @@ const TABS = [
   { path: '/phantom/time', label: 'Time machine', hint: 'Replay 2019 → today' },
   { path: '/phantom/what-if', label: 'What-if', hint: 'Argue with the model' },
   { path: '/phantom/calibration', label: 'Calibration lab', hint: 'Was the score right?' },
+  { path: '/phantom/workbench', label: 'Workbench', hint: 'Score a list · review merges' },
 ];
 
 export function PhantomNav() {

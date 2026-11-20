@@ -350,7 +350,7 @@ def section(res: Dict[str, Any] = None) -> List[str]:
         "The fitted priors are computed here but not applied (run `python -m app.phantom.backtest --fit`)."
     return head + [
         "",
-        "### 6.1 What the backtest found: the stated priors were too optimistic", "",
+        "### 6.1 What the outcomes did to the priors", "",
         f"Fitting uses the cutoffs old enough for a project to have broken ground ({', '.join(res['fit_cutoffs'])}; at least {MATURE_YEARS} years of follow-up): "
         f"{res['fit_cases']['n']} cases from {res['fit_cases']['projects']} projects.", "",
         "| Layer when scored | Stated prior | Cases | Progressed | Observed | Fitted prior |", "|---|---|---|---|---|---|",
@@ -365,13 +365,16 @@ def section(res: Dict[str, Any] = None) -> List[str]:
         *versus([("Reality score, fitted priors (out of sample)", cp), ("Reality score, stated priors (as first built)", ap)]), "",
         "Fitted, out of sample:", "", *reliability(cp), "", "Stated priors:", "", *reliability(ap), "",
         "**What this does and does not show.**", "",
-        f"* **As a filter it works.** Of {ph['n']} cases the fitted score called phantom risk (below {PHANTOM_CALL:.0%}), "
-        f"**{ph['right']} ({_pct(ph['accuracy'])}) showed no verified progress** afterwards, and its low scores are calibrated "
-        f"(see the first row of the table).",
-        f"* **It beats a flat 35% and the evidence layer alone**, but it does **not** beat always guessing the base rate — a number nobody has in advance. "
-        "Before construction starts, the evidence in the news separates projects only weakly: the AUC interval includes 0.5.",
-        f"* **It cannot yet pick winners early.** With the stated priors {lk_a['n']} pre-construction case(s) scored {LIKELY_CALL:.0%} or more and "
-        f"{lk_a['right']} progressed; with fitted priors {lk_c['n']} do. The honest reading is *validated for ruling projects out, not for ruling them in*.",
+        f"* **Its phantom calls are right, but no more often than chance.** Of {ph['n']} cases the fitted score called phantom risk (below {PHANTOM_CALL:.0%}), "
+        f"{ph['right']} ({_pct(ph['accuracy'])}) showed no verified progress — against **{_pct(1 - cp['base_rate'])} for every pre-construction project**. "
+        "Calling everything a phantom would do as well.",
+        f"* **Before construction it does not rank projects.** Out-of-sample AUC is {cp['auc'] if cp['auc'] is not None else '—'}{_ci(cp.get('auc_ci'))}; "
+        f"Brier {cp['brier']:.4f} against {cp['baselines']['flat_35']:.4f} for a flat 35% and {cp['baselines']['base_rate']:.4f} for the base rate. "
+        "The news evidence available before ground is broken does not separate the projects that will be built from those that will not.",
+        f"* **It cannot pick winners early.** With the stated priors {lk_a['n']} pre-construction case(s) scored {LIKELY_CALL:.0%} or more and "
+        f"{lk_a['right']} progressed; with fitted priors {lk_c['n']} do.",
+        "* **Where it does work:** once evidence of construction or operation exists, the score is well calibrated (§6.3) — useful for sizing the real "
+        "pipeline, not for predicting it. Predicting needs pre-construction evidence the news does not carry: filings, supply agreements, clearances.",
         "* *Not progressed* means no verified evidence was found, which is weaker than proof of failure, so observed rates are a lower bound.", "",
         "### 6.3 All projects, including those already under construction", "",
         f"{cv['n']} cases; base rate {cv['base_rate']:.0%}. This flatters any model — a project already being built when scored is an easy call — "
