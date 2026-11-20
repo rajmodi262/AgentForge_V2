@@ -29,6 +29,9 @@ async def structured(system: str, user: str, model_cls: Type[BaseModel], max_tok
                      temperature: float = 0.4) -> tuple[dict, dict]:
     """Return (parsed_dict, meta). Raises on unparseable output."""
     svc = get_claude_service()
+    if svc.mock_mode:
+        # demo output must never become "evidence" in the real tracker
+        raise RuntimeError("No AI provider reachable (running in mock mode) - refusing to extract or argue from made-up output")
     if svc.provider == "ollama":
         res = await svc._ollama_generate(system, user, max_tokens, schema=model_cls.model_json_schema(), model=model_for(tier),
                                          num_ctx=num_ctx, temperature=temperature)
@@ -44,6 +47,8 @@ async def structured(system: str, user: str, model_cls: Type[BaseModel], max_tok
 async def text(system: str, user: str, max_tokens: int = 1024, tier: str = "reason") -> tuple[str, dict]:
     """Free-form JSON-mode call (used where the shape is simple)."""
     svc = get_claude_service()
+    if svc.mock_mode:
+        raise RuntimeError("No AI provider reachable (running in mock mode) - refusing to answer from made-up output")
     if svc.provider == "ollama":
         res = await svc._ollama_generate(system, user, max_tokens, model=model_for(tier))
     else:
