@@ -44,9 +44,21 @@ PLACES = {
     "Bodh Gaya": ("Bihar", "India", 24.6961, 84.9870, ["bodh gaya", "bodhgaya"]),
     "Bhubaneswar": ("Odisha", "India", 20.2961, 85.8245, ["bhubaneswar"]),
     "Jaipur": ("Rajasthan", "India", 26.9124, 75.7873, ["jaipur"]),
+    # Singapore — named districts only; the bare word "Singapore" is a country-level fallback (below),
+    # because Johor articles mention Singapore constantly
+    "Jurong": ("Singapore", "Singapore", 1.3329, 103.7436, ["jurong", "tuas", "jurong island", "pioneer"]),
+    "Loyang": ("Singapore", "Singapore", 1.3700, 103.9750, ["loyang", "changi", "tampines", "pasir ris"]),
+    "Woodlands": ("Singapore", "Singapore", 1.4382, 103.7890, ["woodlands", "kranji", "sungei kadut", "yishun"]),
+    "Singapore Central": ("Singapore", "Singapore", 1.3200, 103.8500, ["ang mo kio", "serangoon", "paya lebar", "kallang", "ubi", "one-north"]),
+    # Indonesia
+    "Batam": ("Riau Islands", "Indonesia", 1.1301, 104.0529, ["batam", "nongsa", "kabil", "bintan"]),
+    "Jakarta": ("Jakarta", "Indonesia", -6.2088, 106.8456, ["jakarta", "south jakarta", "tangerang", "serpong", "bsd city", "depok"]),
+    "Bekasi": ("West Java", "Indonesia", -6.2383, 106.9756, ["bekasi", "cikarang", "karawang", "purwakarta", "bogor"]),
+    "Surabaya": ("East Java", "Indonesia", -7.2575, 112.7521, ["surabaya", "gresik"]),
+    "Bali": ("Bali", "Indonesia", -8.4095, 115.1889, ["bali", "denpasar"]),
 }
 
-COUNTRY_CENTRE = {"Malaysia": (3.9, 102.0), "India": (21.0, 78.0)}
+COUNTRY_CENTRE = {"Malaysia": (3.9, 102.0), "India": (21.0, 78.0), "Singapore": (1.35, 103.82), "Indonesia": (-2.5, 112.0)}
 
 _ALIAS = sorted(((a, canon) for canon, v in PLACES.items() for a in v[4]), key=lambda x: -len(x[0]))
 
@@ -64,6 +76,7 @@ STATES = {
     "West Bengal": ("West Bengal", "India", 22.9868, 87.8550, ["west bengal"]),
     "Odisha": ("Odisha", "India", 20.9517, 85.0985, ["odisha", "orissa"]),
     "Rajasthan": ("Rajasthan", "India", 27.0238, 74.2179, ["rajasthan"]),
+    "Singapore": ("Singapore", "Singapore", 1.3521, 103.8198, ["singapore"]),
 }
 PLACES.update({k: v for k, v in STATES.items() if k not in PLACES})
 _STATE_ALIAS = sorted(((a, canon) for canon, v in STATES.items() for a in v[4]), key=lambda x: -len(x[0]))
@@ -83,7 +96,10 @@ def resolve_place(*texts: Optional[str]) -> Optional[str]:
 
 _IN = re.compile(r"\bindia\b|\bindian\b|₹|\brs\.?\s?\d|\bcrore\b|\blakh\b|maharashtra|tamil nadu|telangana|uttar pradesh|karnataka", re.I)
 _MY = re.compile(r"\bmalaysia\b|\bmalaysian\b|\bringgit\b|\brm\s?\d|\bjohor\b|selangor|\btnb\b|tenaga nasional|bursa", re.I)
-_OTHER = re.compile(r"\b(indonesia|jakarta|batam|singapore|thailand|bangkok|vietnam|philippines|japan|australia|united states|u\.s\.|europe|finland|nurmij\w*|sweden|norway|denmark|ireland|germany|netherlands|spain|united kingdom|hong kong|china|taiwan|korea|philippine|manila|tokyo|saitama|osaka|nongsa|trinidad|tobago|seoul|pohang|sydney|melbourne|texas|virginia|oregon|ohio|arizona|wyoming|idaho|nevada|indiana|louisiana|tennessee|wisconsin|michigan|pennsylvania|new jersey|california|illinois|iowa|london|uk|france|paris|frankfurt|amsterdam|dublin|madrid|italy|milan|cordoba|argentina|brazil|chile|mexico|canada|saudi|uae|dubai|abu dhabi|qatar|africa|nigeria|kenya)\b", re.I)
+_SG = re.compile(r"\bsingapore\b|\bsingaporean\b|\bs\$\s?\d|\bsgd\b|\bimda\b|\bedb\b|\bsp group\b|\bjurong\b|\btuas\b|\bloyang\b", re.I)
+_ID = re.compile(r"\bindonesia\b|\bindonesian\b|\brupiah\b|\brp\s?\d|\bjakarta\b|\bbatam\b|\bbekasi\b|\bcikarang\b|\bpln\b|\bbkpm\b", re.I)
+SIGNALS = {"India": _IN, "Malaysia": _MY, "Singapore": _SG, "Indonesia": _ID}
+_OTHER = re.compile(r"\b(thailand|bangkok|vietnam|philippines|japan|australia|united states|u\.s\.|europe|finland|nurmij\w*|sweden|norway|denmark|ireland|germany|netherlands|spain|united kingdom|hong kong|china|taiwan|korea|philippine|manila|tokyo|saitama|osaka|trinidad|tobago|seoul|pohang|sydney|melbourne|texas|virginia|oregon|ohio|arizona|wyoming|idaho|nevada|indiana|louisiana|tennessee|wisconsin|michigan|pennsylvania|new jersey|california|illinois|iowa|london|uk|france|paris|frankfurt|amsterdam|dublin|madrid|italy|milan|cordoba|argentina|brazil|chile|mexico|canada|saudi|uae|dubai|abu dhabi|qatar|africa|nigeria|kenya)\b", re.I)
 
 
 def infer_country(*texts: Optional[str]) -> Optional[str]:
@@ -92,10 +108,11 @@ def infer_country(*texts: Optional[str]) -> Optional[str]:
     if place:
         return PLACES[place][1]
     blob = " ".join(t or "" for t in texts)
-    i, m, o = len(_IN.findall(blob)), len(_MY.findall(blob)), len(_OTHER.findall(blob))
-    if max(i, m) == 0 or o > max(i, m):
+    hits = sorted(((len(rx.findall(blob)), c) for c, rx in SIGNALS.items()), reverse=True)
+    top, second, other = hits[0][0], hits[1][0], len(_OTHER.findall(blob))
+    if top == 0 or other > top or top == second:
         return None
-    return "India" if i > m else "Malaysia" if m > i else None
+    return hits[0][1]
 
 
 def coords(place: Optional[str], country: Optional[str]) -> Tuple[Optional[str], Optional[str], Optional[float], Optional[float]]:

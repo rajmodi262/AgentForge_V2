@@ -336,7 +336,7 @@ async def ask(body: AskBody, user: User = Depends(get_current_user)):
 
 
 class HuntBody(BaseModel):
-    region: str = Field("malaysia", pattern="^(malaysia|india)$")
+    region: str = Field("malaysia", pattern="^(malaysia|india|singapore|indonesia)$")
     max_rounds: int = Field(2, ge=1, le=3)
 
 

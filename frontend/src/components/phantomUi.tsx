@@ -4,6 +4,7 @@
  */
 import { useNavigate, useLocation } from 'react-router-dom';
 import { colors, radii } from '../styles/tokens';
+import { CommandBar, Tour } from './PhantomCommand';
 
 export const mono = "'JetBrains Mono', monospace";
 export const display = "'Space Grotesk', sans-serif";
@@ -22,7 +23,8 @@ export function PhantomNav() {
   const nav = useNavigate();
   const { pathname } = useLocation();
   return (
-    <div role="tablist" aria-label="Phantom Hunter views" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 18, padding: 5, borderRadius: 14, border: `1px solid ${colors.border}`, background: 'rgba(255,255,255,0.02)', width: 'fit-content', maxWidth: '100%' }}>
+    <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginBottom: 18 }}>
+    <div role="tablist" aria-label="Phantom Hunter views" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', padding: 5, borderRadius: 14, border: `1px solid ${colors.border}`, background: 'rgba(255,255,255,0.02)', width: 'fit-content', maxWidth: '100%' }}>
       {TABS.map((t) => {
         const on = pathname === t.path;
         return (
@@ -34,6 +36,9 @@ export function PhantomNav() {
           </button>
         );
       })}
+    </div>
+    <CommandBar />
+    <Tour />
     </div>
   );
 }

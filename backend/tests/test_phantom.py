@@ -169,7 +169,9 @@ def test_places_and_country_inference():
     assert resolve_place("Panvel") == "Navi Mumbai"
     assert infer_country("the RM2 billion campus in Johor") == "Malaysia"
     assert infer_country("a ₹5,000 crore investment") == "India"
-    assert infer_country("a campus in Jakarta, Indonesia") is None
+    assert infer_country("a campus in Jakarta, Indonesia") == "Indonesia"          # in scope since the SEA corridor was added
+    assert infer_country("a campus in Bangkok, Thailand") is None
+    assert infer_country("the Johor campus, near Singapore, RM2 billion, TNB") == "Malaysia"
 
 
 # ── Scorer ──
