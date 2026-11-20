@@ -31,13 +31,13 @@ def test_export_drops_article_bodies_and_context(db_session, tmp_path):
     _fill(db_session)
     path = tmp_path / "seed.json.gz"
     counts = export(path, db=db_session)
-    assert counts == {"articles": 1, "projects": 1, "mentions": 1, "evidence": 1, "anomalies": 0}
+    assert counts == {"articles": 1, "projects": 1, "mentions": 1, "evidence": 1, "anomalies": 0, "merge_decisions": 0}
     snap = json.load(gzip.open(path, "rt", encoding="utf-8"))
     blob = json.dumps(snap)
     assert "FULL ARTICLE BODY" not in blob and "sentence copied from the article" not in blob
     m = snap["mentions"][0]["data"]
     assert m["_frozen"] is True and "_place" in m and m["events"]          # verified events kept for rebuilds
-    assert set(snap) == {"version", "exported_at", "articles", "projects", "mentions", "evidence", "anomalies"}  # no users
+    assert set(snap) == {"version", "exported_at", "articles", "projects", "mentions", "evidence", "anomalies", "merge_decisions"}  # no users
 
 
 def test_load_round_trip_and_skip_when_data_exists(db_session, tmp_path):

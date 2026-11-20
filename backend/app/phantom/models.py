@@ -120,6 +120,20 @@ class PhAnomaly(Base):
     project = relationship("PhProject", back_populates="anomalies")
 
 
+class PhMergeDecision(Base):
+    """A person's answer to "are these two the same project?" (merge.py). Projects are named by their
+    anchor — the id of their earliest mention — which survives rebuilds; the resolver applies every row."""
+    __tablename__ = "ph_merge_decisions"
+    __table_args__ = (Index("ix_ph_merge_pair", "anchor_a", "anchor_b", unique=True),)
+
+    id = Column(GUID, primary_key=True, default=new_uuid)
+    anchor_a = Column(String(40), nullable=False)
+    anchor_b = Column(String(40), nullable=False)
+    decision = Column(String(10), nullable=False)      # merge | distinct
+    decided_by = Column(String(200))
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+
+
 class PhRun(Base):
     """One hunt: which queries ran, what they found, what each agent did."""
     __tablename__ = "ph_runs"

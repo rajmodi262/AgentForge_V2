@@ -155,8 +155,9 @@ def _same(m: Dict[str, Any], c: Dict[str, Any]) -> bool:
     return max(fuzz.token_set_ratio(m["core"], x) for x in c["cores"]) >= 80
 
 
-def resolve(mentions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """mentions: [{"id", "data", "published", "article_id", "text_kind"}] → clusters with canonical fields."""
+def resolve(mentions: List[Dict[str, Any]], decisions: Optional[Dict[Any, str]] = None) -> List[Dict[str, Any]]:
+    """mentions: [{"id", "data", "published", "article_id", "text_kind"}] → clusters with canonical fields.
+    `decisions`: human merge decisions ({(anchor_a, anchor_b): "merge" | "distinct"}, see merge.py)."""
     from app.phantom.extract import MANY_SITES, NON_FACILITY
     prepared = []
     for row in mentions:
@@ -217,7 +218,11 @@ def resolve(mentions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         if c["codes"]:   # operators number sites by airport / city code: LHR2 is London, TY1 Tokyo, SG1 Singapore
             return not all(re.match(r"[A-Z]+", x).group(0) in FOREIGN_CODES for x in c["codes"])
         return bool(c["caps"]) and any(c["cores"]) and any(m["data"].get("_country_from", "mention") == "mention" for m in c["members"])
-    return [canonicalise(c) for c in clusters if keep(c)]
+    kept = [c for c in clusters if keep(c)]
+    if decisions:
+        from app.phantom.merge import apply_decisions
+        kept = apply_decisions(kept, decisions)
+    return [canonicalise(c) for c in kept]
 
 
 # ── Subject check: is this quote about *this* project? ──
@@ -349,7 +354,8 @@ def canonicalise(c: Dict[str, Any]) -> Dict[str, Any]:
         "power_source": pick("power_source"), "cooling": pick("cooling") or (", ".join(power["cooling"][:2]) or None),
         "power": power,
         "ai_density": any(m["data"].get("ai_density") for m in ms),
-        "mention_ids": [m["id"] for m in ms], "article_ids": list(dict.fromkeys(m["article_id"] for m in ms)),
+        "mention_ids": [m["id"] for m in ms], "anchor": min(str(m["id"]) for m in ms),
+        "article_ids": list(dict.fromkeys(m["article_id"] for m in ms)),
         "text_kinds": [m.get("text_kind") for m in ms],
         "events": events,
         "first_seen": min((m["published"] for m in ms if m["published"]), default=None),

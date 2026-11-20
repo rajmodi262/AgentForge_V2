@@ -32,13 +32,14 @@ from typing import Any, Dict
 from sqlalchemy import Boolean, DateTime, Float, Integer
 
 from app.database import SessionLocal
-from app.phantom.models import PhAnomaly, PhArticle, PhEvidence, PhMention, PhProject
+from app.phantom.models import PhAnomaly, PhArticle, PhEvidence, PhMention, PhMergeDecision, PhProject
 
 logger = logging.getLogger(__name__)
 
 SEED_FILE = Path(__file__).resolve().parents[2] / "seed" / "phantom_seed.json.gz"
 # load order respects foreign keys; delete order is the reverse
-TABLES = [("articles", PhArticle), ("projects", PhProject), ("mentions", PhMention), ("evidence", PhEvidence), ("anomalies", PhAnomaly)]
+TABLES = [("articles", PhArticle), ("projects", PhProject), ("mentions", PhMention), ("evidence", PhEvidence), ("anomalies", PhAnomaly),
+          ("merge_decisions", PhMergeDecision)]   # human merge decisions travel with the data they were made on
 DROP_ARTICLE = {"text", "content_hash"}       # never redistribute article bodies
 DROP_MENTION_DATA = {"context"}                # sentences copied from the article
 
