@@ -67,7 +67,7 @@ def match(rows: List[Dict[str, Any]], tracked: List[Dict[str, Any]]) -> Dict[str
                         "weakest_assumption": t.get("weakest_assumption"), "n_sources": t.get("n_sources")})
         else:
             out.append({**r, "matched": False, "why": ["no tracked project with the same developer, place and size"],
-                        "country_guess": country, "in_scope": (country in ("India", "Malaysia")) if country else None})
+                        "country_guess": country, "in_scope": (country in {c["country"] for c in __import__("app.phantom.sources", fromlist=["REGIONS"]).REGIONS.values()}) if country else None})
     m = [x for x in out if x["matched"]]
     cap = lambda xs: sum(x["capacity_mw"] or 0 for x in xs)  # noqa: E731
     return {"rows": out, "summary": {"rows": len(out), "matched": len(m), "unmatched": len(out) - len(m),

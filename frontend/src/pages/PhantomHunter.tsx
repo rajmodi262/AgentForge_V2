@@ -60,11 +60,14 @@ export default function PhantomHunter() {
   const wsRef = useRef<WebSocket | null>(null);
   const [power, setPower] = useState<PowerHeadline | null>(null);
   const [colorBy, setColorBy] = useState<'score' | 'grid'>('score');
+  const known = useRef<Set<string> | null>(null);           // project ids before the hunt began
+  const [fresh, setFresh] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     try {
       const [s, p] = await Promise.all([phantom.summary(), phantom.projects(country ? `?country=${country}` : '')]);
       setSummary(s); setProjects(p.projects); setError('');
+      if (known.current) setFresh(new Set(p.projects.filter((x) => !known.current!.has(x.id)).map((x) => x.id)));
     } catch (e) { setError((e as Error).message); }
   }, [country]);
 
@@ -77,6 +80,7 @@ export default function PhantomHunter() {
   const startHunt = async (region: string) => {
     try {
       setHunting(true); setHuntLog([`▶ Starting a hunt in ${region}…`]);
+      known.current = new Set(projects.map((x) => x.id)); setFresh(new Set()); setColorBy('score');
       const r = await phantom.hunt(region);
       const ws = new WebSocket(`${WS_BASE}${r.websocket_url}`);
       wsRef.current = ws;
@@ -85,7 +89,10 @@ export default function PhantomHunter() {
         const events = d.type === 'catchup' ? d.events : [d];
         for (const e of events) {
           if (e.type === 'hunt_finished') { setHunting(false); setHuntLog((l) => [...l, `✓ Hunt ${e.status}`]); load(); }
-          else if (e.content) setHuntLog((l) => [...l.slice(-40), `[${e.agent}] ${e.content}`]);
+          else if (e.content) {
+            setHuntLog((l) => [...l.slice(-40), `[${e.agent}] ${e.content}`]);
+            if (e.agent === 'Resolver') load();   // new projects appear on the globe as soon as they are resolved
+          }
         }
       };
     } catch (e) { setHunting(false); setHuntLog((l) => [...l, `✗ ${(e as Error).message}`]); }
@@ -108,7 +115,7 @@ export default function PhantomHunter() {
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 20 }}>
           <div>
-            <div style={{ fontFamily: mono, fontSize: 11, letterSpacing: '0.2em', color: colors.secondary }}>INDIA · MALAYSIA DATA-CENTRE PIPELINE</div>
+            <div style={{ fontFamily: mono, fontSize: 11, letterSpacing: '0.2em', color: colors.secondary }}>INDIA · MALAYSIA · SINGAPORE · INDONESIA DATA-CENTRE PIPELINE</div>
             <h1 style={{ margin: '6px 0 4px', fontSize: '2rem', fontFamily: "'Space Grotesk', sans-serif" }}>👻 Phantom Hunter</h1>
             <div style={{ color: colors.textMuted, fontSize: typography.sm, maxWidth: 680 }}>
               Every announced data centre is a promise. Agents read the public news, verify every claim against its source, and score how likely each project is to really get built — and who should call them this month.
@@ -123,7 +130,7 @@ export default function PhantomHunter() {
                style={{ padding: '0.6rem 1rem', borderRadius: radii.md, border: `1px solid ${colors.borderLight}`, background: 'rgba(255,255,255,0.05)', color: '#fff', fontWeight: 600, textDecoration: 'none' }}>
               ⬇ CSV
             </a>
-            {['malaysia', 'india'].map((r) => (
+            {['india', 'malaysia', 'singapore', 'indonesia'].map((r) => (
               <button key={r} disabled={hunting} onClick={() => startHunt(r)} style={{ padding: '0.6rem 1rem', borderRadius: radii.md, border: `1px solid ${colors.borderLight}`, background: hunting ? 'rgba(255,255,255,0.04)' : 'linear-gradient(135deg, rgba(124,58,237,0.35), rgba(6,182,212,0.25))', color: '#fff', cursor: hunting ? 'wait' : 'pointer', fontWeight: 600 }}>
                 {hunting ? '⏳ Hunting…' : `🛰️ Hunt ${r[0].toUpperCase() + r.slice(1)}`}
               </button>
@@ -156,7 +163,7 @@ export default function PhantomHunter() {
                 ))}
               </div>
               <select value={country} onChange={(e) => setCountry(e.target.value)} style={{ background: colors.bgInput, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '4px 8px' }}>
-                <option value="">All countries</option><option>India</option><option>Malaysia</option>
+                <option value="">All countries</option><option>India</option><option>Malaysia</option><option>Singapore</option><option>Indonesia</option>
               </select>
             </div>
             <RealityGlobe projects={projects} onPick={(id) => nav(`/phantom/${id}`)} look={colorBy === 'grid' ? {
@@ -164,7 +171,13 @@ export default function PhantomHunter() {
               fillOf: (p: GlobeItem) => ((p as PowerProject).power?.secured ? 1 : (p as PowerProject).grid_position === 'NO_EVIDENCE' ? 0.06 : 0.45),
               detailOf: (p: GlobeItem) => (p as PowerProject).grid_label || 'no public evidence of power',
               legend: <>{GRID_ORDER.filter((k) => k !== 'APPLIED').map((k) => <span key={k} style={{ marginRight: 12 }}><span style={{ color: GRID_COLORS[k] }}>■</span> {k.replace(/_/g, ' ').toLowerCase()}</span>)}</>,
+            } : fresh.size ? {
+              colorOf: (p: GlobeItem) => (fresh.has(p.id) ? '#fde047' : scoreColor(p.reality_score)),
+              fillOf: (p: GlobeItem) => (fresh.has(p.id) ? 1 : p.reality_score),
+              detailOf: (p: GlobeItem) => (fresh.has(p.id) ? 'new in this hunt' : `${Math.round(p.reality_score * 100)}% real`),
+              legend: <><span style={{ color: '#fde047' }}>■</span> {fresh.size} new in this hunt · <span style={{ color: '#10b981' }}>■</span> already tracked, by reality score</>,
             } : undefined} />
+            {hunting && <div style={{ marginTop: 8, fontFamily: mono, fontSize: 12, color: colors.secondary }}>🛰️ {huntLog[huntLog.length - 1]}</div>}
           </div>
           <div style={card}>
             <div style={{ fontWeight: 600, marginBottom: 4 }}>📞 Who to call this month</div>

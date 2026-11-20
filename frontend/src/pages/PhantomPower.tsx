@@ -43,7 +43,7 @@ export default function PhantomPower() {
             A data centre is a power project with servers attached. Every project's verified sentences are read for its grid position, supplier, connection, cooling and who builds and funds it. Rules only, and every fact keeps its quote.
           </PageHead>
           <select value={country} onChange={(e) => setCountry(e.target.value)} aria-label="Country" style={{ background: colors.bgInput, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '6px 10px', marginBottom: 14 }}>
-            <option value="">India + Malaysia</option><option>India</option><option>Malaysia</option>
+            <option value="">All countries</option><option>India</option><option>Malaysia</option><option>Singapore</option><option>Indonesia</option>
           </select>
         </div>
         {err && <Fail msg={err} />}

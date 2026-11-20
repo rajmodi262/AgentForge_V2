@@ -118,7 +118,7 @@ async def investigate(project_id: str, emit=None, max_steps: int = MAX_STEPS) ->
     if not start:
         raise ValueError("project not found")
     trace: List[Dict[str, Any]] = []
-    region = "malaysia" if start["country"] == "Malaysia" else "india"
+    region = (start["country"] or "India").lower()
     place = start["city"] or start["state"] or ""
     cur, tried, last_found, stop = start, [], None, "budget"
     await say({"step": 0, "thought": f"Starting on {start['name']}: {round((start['score'] or 0) * 100)}% real, {start['evidence']} verified evidence items.",

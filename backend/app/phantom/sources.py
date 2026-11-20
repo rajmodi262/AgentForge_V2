@@ -51,6 +51,22 @@ REGIONS = {
         "places": ["Johor", "Johor Bahru", "Kulai", "Sedenak", "Iskandar Puteri", "Cyberjaya", "Kulim", "Negeri Sembilan", "Selangor"],
         "developers": ["YTL", "AirTrunk Johor", "Bridge Data Centres", "Princeton Digital Group Johor", "STACK Infrastructure Malaysia", "Vantage Data Centers Malaysia", "Equinix Johor", "Yondr Johor", "DayOne", "K2 Strategic", "Microsoft Malaysia data centre", "Google Malaysia data centre"],
     },
+    "singapore": {
+        "country": "Singapore",
+        "bing_mkt": "en-SG",
+        "google": ("en-SG", "SG", "SG:en"),
+        "places": ["Singapore", "Jurong", "Tuas", "Loyang", "Woodlands", "Kranji"],
+        "developers": ["Equinix Singapore", "Digital Realty Singapore", "Keppel Data Centres", "STT GDC Singapore", "Nxera Singapore",
+                       "Microsoft Singapore data centre", "Google Singapore data centre", "AirTrunk Singapore", "Princeton Digital Group Singapore", "DayOne Singapore"],
+    },
+    "indonesia": {
+        "country": "Indonesia",
+        "bing_mkt": "en-ID",
+        "google": ("en-ID", "ID", "ID:en"),
+        "places": ["Jakarta", "Batam", "Bekasi", "Cikarang", "Karawang", "Surabaya"],
+        "developers": ["DCI Indonesia", "Princeton Digital Group Jakarta", "BDx Indonesia", "Digital Edge Indonesia", "Telkom NeutraDC", "EdgeConneX Indonesia",
+                       "STT GDC Indonesia", "DayOne Batam", "Nongsa Digital Park", "Microsoft Indonesia data centre", "Google Indonesia data centre"],
+    },
 }
 
 SEED_TEMPLATES = [

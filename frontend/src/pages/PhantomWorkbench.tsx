@@ -59,7 +59,7 @@ function ImportPanel() {
                   <tr key={r.row} style={{ borderBottom: `1px solid ${colors.border}`, cursor: r.project_id ? 'pointer' : 'default' }} onClick={() => r.project_id && nav(`/phantom/${r.project_id}`)}>
                     <td style={{ padding: 8, fontFamily: mono, color: colors.textDim }}>{r.row}</td>
                     <td style={{ padding: 8 }}><b>{r.name}</b><div style={{ fontSize: 11.5, color: colors.textDim }}>{[r.developer, r.city, r.capacity_mw && fmtMW(r.capacity_mw)].filter(Boolean).join(' · ')}</div></td>
-                    <td style={{ padding: 8 }}>{r.matched ? <>{r.project}<div style={{ fontSize: 11, color: colors.textDim }}>{pct(r.confidence)} alike · {r.why.join('; ')}</div></> : <span style={{ color: colors.textDim }}>not tracked{r.in_scope === false ? ' (outside India / Malaysia)' : ''}</span>}</td>
+                    <td style={{ padding: 8 }}>{r.matched ? <>{r.project}<div style={{ fontSize: 11, color: colors.textDim }}>{pct(r.confidence)} alike · {r.why.join('; ')}</div></> : <span style={{ color: colors.textDim }}>not tracked{r.in_scope === false ? ' (outside the tracked countries)' : ''}</span>}</td>
                     <td style={{ padding: 8, fontFamily: mono, color: r.matched ? scoreColor(r.reality_score || 0) : colors.textDark }}>{r.matched ? pct(r.reality_score) : '—'}</td>
                     <td style={{ padding: 8 }}>{r.grid_position ? <Chip color={GRID_COLORS[r.grid_position]}>{r.grid_position.replace(/_/g, ' ').toLowerCase()}</Chip> : '—'}</td>
                     <td style={{ padding: 8, fontSize: 12, color: colors.textDim, maxWidth: 340 }}>{r.weakest_assumption || (r.matched ? '' : 'We have no public evidence for this row. A hunt or an investigation is the next step.')}</td>

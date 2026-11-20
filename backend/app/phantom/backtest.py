@@ -38,7 +38,7 @@ from app.phantom.targeted import CUTOFF
 PROGRESS = {"BUILDING", "LIVE"}
 NEGATIVE = {"CANCELLED", "DELAYED"}
 CUTOFFS = [datetime(y, 6, 30, tzinfo=timezone.utc) for y in (2022, 2023, 2024, 2025)]
-SCOPE = ("India", "Malaysia")
+SCOPE = ("India", "Malaysia", "Singapore", "Indonesia")
 PHANTOM_CALL, LIKELY_CALL = 0.45, 0.60   # same bands the product shows
 
 
