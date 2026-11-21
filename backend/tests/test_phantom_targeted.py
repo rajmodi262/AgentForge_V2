@@ -11,6 +11,25 @@ def test_queries_are_short_and_deduplicated():
     assert all("site:" in q for qs in official_queries().values() for q in qs)
 
 
+def test_filings_queries_search_each_project_on_its_countrys_filing_sites():
+    from app.phantom.targeted import filings_queries
+    qs = filings_queries([{"name": "YTL Kulai campus", "developer": "YTL", "country": "Malaysia"},
+                          {"name": "Yotta D1", "developer": "Yotta", "country": "India"},
+                          {"name": "Somewhere", "developer": "X", "country": "Atlantis"}])
+    assert set(qs) == {"malaysia", "india"}
+    assert qs["malaysia"] == ["YTL Kulai campus data centre (site:bursamalaysia.com OR site:mida.gov.my OR site:st.gov.my OR site:tnb.com.my)"]
+    assert "site:bseindia.com" in qs["india"][0]
+
+
+def test_filing_dates_err_late_and_never_in_the_future():
+    from app.phantom.targeted import date_in_text
+    now = datetime(2026, 11, 21, tzinfo=timezone.utc)
+    d = date_in_text("Board meeting held on 12th March 2023. Outcome filed 14/03/2023.", now)
+    assert d == datetime(2023, 3, 14, tzinfo=timezone.utc)                       # the latest stated date, numeric read day-first
+    assert date_in_text("Dated March 5, 2022; to be commissioned by 31 Dec 2030", now) == datetime(2022, 3, 5, tzinfo=timezone.utc)
+    assert date_in_text("no date here", now) is None
+
+
 def _m(i, name, dev, published, events):
     return {"id": i, "article_id": f"a{i}", "text_kind": "full", "published": published,
             "data": {"project_name": name, "developer": dev, "country": "Malaysia", "city": "Kulai", "capacity_mw": 100, "events": events}}

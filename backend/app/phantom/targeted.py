@@ -3,6 +3,7 @@
     python -m app.phantom.targeted gaps        # recall gaps: sites the recall check says we missed
     python -m app.phantom.targeted official    # official sources: approvals, clearances, utility & investment notices
     python -m app.phantom.targeted outcomes    # what happened to projects first seen before the backtest cutoff
+    python -m app.phantom.targeted filings     # exchange / clearance / regulator filings for the fair-test projects
 
 Each job writes search queries, runs them through Firecrawl search, reads the hits
 (direct fetch first, Firecrawl fallback, robots.txt respected) and stores them as normal
@@ -17,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import sys
 from collections import defaultdict
 from dataclasses import replace
@@ -96,6 +98,81 @@ def outcome_queries() -> Dict[str, List[str]]:
     return {k: list(dict.fromkeys(v)) for k, v in out.items()}
 
 
+# ── Filings: pre-construction evidence for the backtest's fair-test projects ──
+# News rarely separates real projects from talk before ground is broken (PHANTOM_EVAL §6.2);
+# exchange disclosures, clearances and regulator orders might. Every fair-test project is
+# searched the same way, whatever its outcome, and only up to the last fitting cutoff:
+# the backtest still ignores anything published after each cutoff.
+FILINGS = {
+    "india": ["bseindia.com", "nseindia.com", "parivesh.nic.in", "environmentclearance.nic.in"],
+    "malaysia": ["bursamalaysia.com", "mida.gov.my", "st.gov.my", "tnb.com.my"],
+    "singapore": ["sgx.com", "edb.gov.sg", "imda.gov.sg"],
+    "indonesia": ["idx.co.id", "bkpm.go.id", "investindonesia.go.id"],
+}
+FILINGS_TBS = f"cdr:1,cd_min:1/1/2018,cd_max:{CUTOFF.month}/{CUTOFF.day}/{CUTOFF.year}"
+
+
+def filings_projects() -> List[Dict]:
+    """The projects the fair test scores: not yet under construction at a cutoff used for fitting."""
+    from app.phantom import backtest as B
+    res = B.run()
+    out: Dict[str, Dict] = {}
+    for r in res["pooled_rows"]:
+        if r["stage_then"] not in B.PROGRESS and r["cutoff"] in res["fit_cutoffs"]:
+            out.setdefault(r["project"], {"name": r["name"], "developer": r["developer"], "country": r["country"]})
+    return list(out.values())
+
+
+def filings_queries(projects: List[Dict] = None) -> Dict[str, List[str]]:
+    out: Dict[str, List[str]] = defaultdict(list)
+    for p in filings_projects() if projects is None else projects:
+        region = (p["country"] or "").lower()
+        if region in FILINGS:
+            sites = " OR ".join(f"site:{d}" for d in FILINGS[region])
+            out[region].append(f"{_q(p['developer'], p['name'], None)} ({sites})")
+    return {k: list(dict.fromkeys(v)) for k, v in out.items()}
+
+
+_DATE = re.compile(r"\b(\d{1,2})(?:st|nd|rd|th)?[\s/.-]+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?[\s/.,-]+(\d{4})\b"
+                   r"|\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})\b"
+                   r"|\b(\d{1,2})[/.-](\d{1,2})[/.-](20\d{2})\b", re.I)
+
+
+def date_in_text(text: str, today: datetime = None) -> datetime | None:
+    """A filing's date when the search result has none: the LATEST explicit date in its opening.
+    Taking the latest errs late, so a filing can only drop out of a cutoff, never leak into one early.
+    Numeric dates are read day-first (Indian, Malaysian and Singapore style)."""
+    today = today or datetime.now(timezone.utc)
+    found = []
+    for m in _DATE.finditer(text[:2000]):
+        try:
+            if m.group(3):
+                d = datetime.strptime(f"{m.group(1)} {m.group(2)[:3]} {m.group(3)}", "%d %b %Y")
+            elif m.group(6):
+                d = datetime.strptime(f"{m.group(5)} {m.group(4)[:3]} {m.group(6)}", "%d %b %Y")
+            else:
+                d = datetime(int(m.group(9)), int(m.group(8)), int(m.group(7)))
+        except ValueError:
+            continue
+        d = d.replace(tzinfo=timezone.utc)
+        if d <= today:
+            found.append(d)
+    return max(found) if found else None
+
+
+async def _search_filings(qs: List[str], region: str) -> list:
+    import httpx
+    from app.phantom.sources import HEADERS, REGIONS
+    items, seen = [], set()
+    async with httpx.AsyncClient(headers=HEADERS, timeout=20, follow_redirects=True) as client:
+        for q in qs:
+            for it in await firecrawl.search(client, q, REGIONS[region]["country"], tbs=FILINGS_TBS):
+                if it.url not in seen:
+                    seen.add(it.url)
+                    items.append(it)
+    return items
+
+
 HISTORY_YEARS = range(2019, 2024)
 
 
@@ -138,7 +215,8 @@ async def _search_free(qs: List[str], region: str, chunk: int = 10, pause: float
     return items
 
 
-JOBS = {"gaps": gap_queries, "official": official_queries, "outcomes": outcome_queries, "history": history_queries}
+JOBS = {"gaps": gap_queries, "official": official_queries, "outcomes": outcome_queries, "history": history_queries,
+        "filings": filings_queries}
 
 
 async def run(job: str, budget: int) -> Dict:
@@ -147,14 +225,22 @@ async def run(job: str, budget: int) -> Dict:
     stats = {"job": job, "queries": sum(len(v) for v in queries.values()), "found": 0, "relevant": 0, "full_text": 0, "new": 0}
     for region, qs in queries.items():
         try:
-            items = await _search_free(qs, region) if job == "history" else await search(qs, region, feeds=("firecrawl",))
+            if job == "history":
+                items = await _search_free(qs, region)
+            elif job == "filings":
+                items = await _search_filings(qs, region)
+            else:
+                items = await search(qs, region, feeds=("firecrawl",))
         except firecrawl.BudgetExceeded:
             items = []
         items = [replace(i, feed=job) for i in items]
         stats["found"] += len(items)
         # read only what can matter: the headline/snippet already looks like data-centre project news
-        keep = [i for i in items if is_relevant(i.title, i.summary) or job == "official"]
+        keep = [i for i in items if is_relevant(i.title, i.summary) or job in ("official", "filings")]
         fetched = await fetch_all(keep, concurrency=3)
+        if job == "filings":  # undated filings get the date they state; still none → kept, but outside the backtest
+            fetched = [a if a.item.published_at else replace(a, item=replace(a.item, published_at=date_in_text(a.text))) for a in fetched]
+            stats["dated"] = sum(1 for a in fetched if a.item.published_at)
         saved = await asyncio.to_thread(save_articles, fetched)
         stats["relevant"] += sum(1 for a in fetched if is_relevant(a.item.title, a.text))
         stats["full_text"] += sum(1 for a in fetched if a.text_kind == "full")

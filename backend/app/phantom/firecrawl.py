@@ -129,12 +129,13 @@ async def _post(client: httpx.AsyncClient, path: str, payload: dict, timeout: fl
     return r
 
 
-async def search(client: httpx.AsyncClient, query: str, country: str, limit: int = 10, b: Optional[Budget] = None):
+async def search(client: httpx.AsyncClient, query: str, country: str, limit: int = 10, b: Optional[Budget] = None,
+                 tbs: str = "qdr:y"):
     """News + web results for a query. Returns sources.FeedItem objects (feed="firecrawl")."""
     from app.phantom.sources import FeedItem, _strip_html
     b = b or budget()
     r = await _post(client, "/search", {"query": query, "limit": limit, "sources": [{"type": "news"}, {"type": "web"}],
-                                        "location": country, "tbs": "qdr:y"},
+                                        "location": country, **({"tbs": tbs} if tbs else {})},
                     60, b, "search", SEARCH_CREDITS_PER_10 * max(1, (limit + 9) // 10))
     r.raise_for_status()
     data = (r.json() or {}).get("data") or {}
