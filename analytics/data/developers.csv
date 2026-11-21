@@ -1,79 +1,91 @@
 ﻿developer,countries,projects,announced_mw,reality_mw,live,building,pre_construction,live_mw,secured_mw,judged,built_of_judged,build_rate,months_to_ground,timed_projects
-CtrlS,India,31,7730.0,3507.5,8,4,19,1193.0,1193.0,7,6,0.857,9.3,3
-Reliance Jio,India,15,7533.0,3163.0,0,1,14,0,0,2,0,,,0
-Google,"India, Malaysia",19,6268.4,2285.7,1,8,10,28.4,28.4,0,0,,,0
-YTL,Malaysia,13,4802.5,2215.1,1,0,12,500.0,500.0,5,1,0.2,,0
-AdaniConneX,"India, Malaysia",14,4537.0,1269.4,3,0,11,197.0,197.0,4,1,0.25,,0
+CtrlS,India,31,7730.0,3442.7,8,4,19,1193.0,1193.0,7,6,0.857,9.3,3
+Reliance Jio,India,15,7533.0,2968.7,0,1,14,0,0,2,0,,,0
+Google,"India, Malaysia, Singapore",20,6268.4,2163.3,1,8,11,28.4,28.4,1,0,,,0
+YTL,Malaysia,13,4802.5,2155.0,1,0,12,500.0,500.0,5,1,0.2,,0
+AdaniConneX,"India, Malaysia",14,4537.0,1094.9,3,0,11,197.0,197.0,4,1,0.25,,0
 Lodha,India,1,4000.0,1512.0,0,0,1,0,0,0,0,,,0
-Sify,India,13,3037.0,1384.5,3,2,8,100.0,100.0,3,0,0.0,,0
-DayOne,Malaysia,3,3000.0,1601.0,1,0,2,1000.0,1000.0,0,0,,16.1,1
-Digital Connexion,India,8,2345.0,1423.7,2,1,5,120.0,120.0,3,1,0.333,,0
-NTT DATA,"India, Malaysia",19,2173.0,1189.9,13,1,5,956.0,956.0,12,10,0.833,29.7,5
-TCS HyperVault,India,2,2000.0,663.0,0,0,2,0,0,0,0,,,0
-Princeton Digital Group,"India, Malaysia",18,1834.8,921.2,5,0,13,504.8,504.8,9,3,0.333,8.3,2
-AirTrunk,"India, Malaysia",9,1656.0,656.1,2,0,7,200.0,200.0,3,2,0.667,18.3,1
+DayOne,"Indonesia, Malaysia, Singapore",5,3092.0,1627.2,1,1,3,1000.0,1000.0,0,0,,16.1,1
+Sify,India,13,3037.0,1359.4,3,2,8,100.0,100.0,3,0,0.0,,0
+Princeton Digital Group,"India, Indonesia, Malaysia",30,2870.8,1382.5,6,3,21,526.8,526.8,16,4,0.25,8.3,2
+Digital Connexion,India,8,2345.0,1419.1,2,1,5,120.0,120.0,3,1,0.333,,0
+NTT DATA,"India, Indonesia, Malaysia",20,2185.0,1170.2,14,1,5,968.0,968.0,12,10,0.833,29.7,5
+TCS HyperVault,India,2,2000.0,632.0,0,0,2,0,0,0,0,,,0
+AirTrunk,"India, Malaysia, Singapore",10,1716.0,604.9,2,0,8,200.0,200.0,4,2,0.5,18.3,1
+STT GDC,"India, Indonesia, Malaysia, Singapore",24,1240.2,654.1,7,4,13,275.0,275.0,6,4,0.667,5.7,3
 Fortune Hospitality,India,3,1200.0,802.8,0,0,3,0,1200.0,0,0,,,0
-Bridge Data Centres,Malaysia,6,1064.0,773.8,1,2,3,100.0,800.0,4,2,0.5,30.0,2
-Yotta,India,19,1012.0,247.4,3,1,15,52.0,52.0,11,1,0.091,59.9,1
+Digital Edge,"India, Indonesia, Malaysia",6,1116.0,288.7,1,0,5,23.0,23.0,4,1,0.25,8.8,1
+Bridge Data Centres,Malaysia,6,1064.0,771.3,1,2,3,100.0,800.0,4,2,0.5,30.0,2
+Yotta,India,19,1012.0,215.2,3,1,15,52.0,52.0,11,1,0.091,59.9,1
 Gamuda,Malaysia,3,1000.0,385.0,0,0,3,0,0,0,0,,,0
-AM Group,India,1,1000.0,155.0,0,0,1,0,0,0,0,,,0
-ETDatacenters,India,1,1000.0,155.0,0,0,1,0,0,0,0,,,0
-not specified,India,1,1000.0,155.0,0,0,1,0,0,0,0,,,0
-Meta,India,5,936.0,196.2,0,0,5,0,0,1,0,,,0
-Vantage Data Centers,Malaysia,7,874.0,598.5,3,2,2,287.0,543.0,5,5,1.0,14.7,2
-Yondr,Malaysia,3,850.0,602.2,1,0,2,550.0,550.0,2,0,,,0
+AM Group,India,1,1000.0,124.0,0,0,1,0,0,0,0,,,0
+ETDatacenters,India,1,1000.0,124.0,0,0,1,0,0,0,0,,,0
+not specified,India,1,1000.0,124.0,0,0,1,0,0,0,0,,,0
+Meta,"India, Indonesia",6,956.0,161.0,0,0,6,0,0,2,0,,,0
+EdgeConneX,"India, Indonesia, Malaysia",8,878.0,158.3,1,0,7,33.0,33.0,5,1,0.2,,0
+Vantage Data Centers,Malaysia,7,874.0,589.6,3,2,2,287.0,543.0,5,5,1.0,14.7,2
+Yondr,Malaysia,3,850.0,590.9,1,0,2,550.0,550.0,2,0,,,0
 NCT Alliance,Malaysia,1,800.0,340.8,0,0,1,0,0,0,0,,,0
-EdgeConneX,"India, Malaysia",7,788.0,151.4,1,0,6,33.0,33.0,4,1,0.25,,0
-L&T Vyoma,"India, Malaysia",10,746.8,232.6,3,0,7,122.0,122.0,3,1,0.333,,0
-STT GDC,"India, Malaysia",19,719.2,478.3,4,4,11,164.0,164.0,4,3,0.75,26.8,2
-Anant Raj,India,3,696.0,350.7,0,1,2,0,0,0,0,,,0
-Telekom Malaysia,Malaysia,4,688.0,475.7,1,1,2,64.0,624.0,3,2,0.667,,0
+L&T Vyoma,"India, Malaysia",10,746.8,211.3,3,0,7,122.0,122.0,3,1,0.333,,0
+BDx,Indonesia,2,740.0,638.2,1,0,1,640.0,640.0,1,0,,,0
+Anant Raj,India,3,696.0,335.2,0,1,2,0,0,0,0,,,0
 ESR,"India, Malaysia",3,630.0,325.9,0,0,3,0,0,0,0,,,0
-CapitaLand,India,10,564.0,228.3,2,1,7,161.0,161.0,2,1,,46.0,1
-Racks Central,Malaysia,1,510.0,79.0,0,0,1,0,0,0,0,,,0
-Beacon Data Centers,India,1,500.0,77.5,0,0,1,0,0,0,0,,,0
-Amazon Web Services,India,4,473.0,425.2,0,1,3,0,0,1,0,,,0
+DCI Indonesia,Indonesia,4,628.0,41.9,0,0,4,0,0,3,0,0.0,,0
+Telekom Malaysia,Malaysia,3,624.0,321.9,0,0,3,0,560.0,1,0,,,0
+CoreWeave,India,2,600.0,182.4,0,0,2,0,0,0,0,,,0
+CapitaLand,India,10,564.0,214.9,2,1,7,161.0,161.0,2,1,,46.0,1
+Racks Central,Malaysia,1,510.0,81.6,0,0,1,0,0,0,0,,,0
+Salim Group,Indonesia,2,505.0,62.6,0,0,2,0,0,0,0,,,0
+Beacon Data Centers,India,1,500.0,62.0,0,0,1,0,0,0,0,,,0
+Amazon Web Services,India,4,473.0,428.5,0,1,3,0,0,1,0,,,0
 Amazon,India,1,422.0,200.9,0,0,1,0,0,0,0,,,0
-Iron Mountain,India,14,398.1,159.8,2,0,12,90.5,90.5,3,1,0.333,,0
-Vena Nexus (part of the Vena Group),Malaysia,1,350.0,54.2,0,0,1,0,0,0,0,,,0
-Colt DCS,India,4,340.0,95.9,0,1,3,0,0,1,0,,,0
-Nxtra,India,9,315.0,123.8,3,0,6,48.0,48.0,2,1,,,0
-Tillman Global Holdings,India,1,300.0,80.7,0,0,1,0,0,0,0,,,0
-Digital Edge,"India, Malaysia",2,270.0,142.0,0,0,2,0,0,0,0,,,0
-Airtel,India,4,260.0,200.1,0,1,3,0,0,1,1,,,0
-CoreWeave,India,1,240.0,137.8,0,0,1,0,0,0,0,,,0
-Bitdeer,Malaysia,5,223.2,45.5,0,0,5,0,0,0,0,,,0
+Iron Mountain,India,14,398.1,149.1,2,0,12,90.5,90.5,3,1,0.333,,0
+Vena Nexus (part of the Vena Group),Malaysia,1,350.0,43.4,0,0,1,0,0,0,0,,,0
+Colt DCS,India,4,340.0,88.9,0,1,3,0,0,1,0,,,0
+Nxtra,India,9,315.0,110.9,3,0,6,48.0,48.0,2,1,,,0
+Tillman Global Holdings,India,1,300.0,66.3,0,0,1,0,0,0,0,,,0
+Airtel,India,4,260.0,198.7,0,1,3,0,0,1,1,,,0
+Telkom Indonesia,Indonesia,3,227.0,54.3,1,0,2,21.5,21.5,0,0,,,0
+Bitdeer,Malaysia,5,223.2,36.9,0,0,5,0,0,0,0,,,0
 Equinix,"India, Malaysia",5,200.0,72.2,2,0,3,0,0,1,0,,,0
-Adani Group,India,3,200.0,31.0,0,0,3,0,0,0,0,,,0
+Adani Group,India,3,200.0,24.8,0,0,3,0,0,0,0,,,0
 Digital Bridge-owned AIMS,Malaysia,1,200.0,72.2,0,0,1,0,0,0,0,,,0
-Hiranandani,India,1,180.0,27.9,0,0,1,0,0,0,0,,,0
-Digital Realty,Malaysia,9,146.0,97.1,4,0,5,79.0,79.0,2,1,,58.3,1
-STT Global Data Centres India,India,1,100.0,10.0,0,0,1,0,0,0,0,,,0
-UPC Renewables and Volt Data Centers,India,1,100.0,15.5,0,0,1,0,0,0,0,,,0
-UPC Volt (joint venture between UPC Renewables Group and VOLT Data Centers),India,1,100.0,15.5,0,0,1,0,0,0,0,,,0
-Ascendas,India,1,90.0,7.5,0,0,1,0,0,1,0,,,0
-Techno Digital,India,7,78.0,67.3,1,3,3,36.0,36.0,0,0,,1.3,1
-Microsoft,"India, Malaysia",4,67.0,6.7,1,0,3,0,0,3,1,0.333,56.1,1
-TCC Concept Limited (NES Data Private Limited),India,1,60.0,9.3,0,0,1,0,0,0,0,,,0
-GDS,Malaysia,1,54.0,4.5,0,0,1,0,0,1,0,,,0
-Web Werks,India,4,39.5,15.3,2,0,2,9.5,9.5,4,2,0.5,,0
-Pi Data Centers,India,2,26.0,4.0,0,0,2,0,0,0,0,,,0
+Digital Realty,"Malaysia, Singapore",10,196.0,100.9,4,0,6,79.0,79.0,2,1,,58.3,1
+Hiranandani,India,1,180.0,22.3,0,0,1,0,0,0,0,,,0
+Nxera,"Indonesia, Malaysia, Singapore",5,174.0,118.7,2,2,1,65.0,65.0,4,4,1.0,,0
+STT Global Data Centres India,India,1,100.0,7.9,0,0,1,0,0,0,0,,,0
+UPC Renewables and Volt Data Centers,India,1,100.0,12.4,0,0,1,0,0,0,0,,,0
+UPC Volt (joint venture between UPC Renewables Group and VOLT Data Centers),India,1,100.0,12.4,0,0,1,0,0,0,0,,,0
+Ascendas,India,1,90.0,5.9,0,0,1,0,0,1,0,,,0
+GDS,"Indonesia, Malaysia",2,82.0,5.3,0,0,2,0,0,2,0,,,0
+Techno Digital,India,7,78.0,67.5,1,3,3,36.0,36.0,0,0,,1.3,1
+Microsoft,"India, Malaysia",4,67.0,5.3,1,0,3,0,0,3,1,0.333,56.1,1
+Sinar Mas,Indonesia,3,60.0,4.7,0,0,3,0,0,2,0,,,0
+TCC Concept Limited (NES Data Private Limited),India,1,60.0,7.4,0,0,1,0,0,0,0,,,0
+Web Werks,India,4,39.5,15.1,2,0,2,9.5,9.5,4,2,0.5,,0
+Pi Data Centers,India,2,26.0,3.2,0,0,2,0,0,0,0,,,0
+Edge DC (anak perusahaan Indoninternet),Indonesia,1,23.0,1.8,0,0,1,0,0,1,0,,,0
 OneQode,India,1,14.0,13.8,1,0,0,14.0,14.0,0,0,,,0
-RailTel,India,1,10.0,1.3,0,0,1,0,0,0,0,,,0
-Techno Electric & Engineering Company,India,1,10.0,1.6,0,0,1,0,0,0,0,,,0
+RailTel,India,1,10.0,1.0,0,0,1,0,0,0,0,,,0
+Techno Electric & Engineering Company,India,1,10.0,1.2,0,0,1,0,0,0,0,,,0
+Gaw-backed joint venture,Indonesia,1,5.2,0.6,0,0,1,0,0,0,0,,,0
 "Mitsui Fudosan Co.,",India,3,0,0.0,0,0,3,0,0,0,0,,,0
 Sime Darby Property,Malaysia,3,0,0.0,1,0,2,0,0,1,1,,12.7,1
+Firmus,Indonesia,2,0,0.0,0,0,2,0,0,0,0,,,0
 Open DC,Malaysia,2,0,0.0,2,0,0,0,0,0,0,,,0
 Adani Infra,India,1,0,0.0,0,0,1,0,0,0,0,,,0
 Avisirah,India,1,0,0.0,0,0,1,0,0,0,0,,,0
 BCEI Malaysia,Malaysia,1,0,0.0,0,0,1,0,0,1,0,,,0
+BP Batam,Indonesia,1,0,0.0,0,0,1,0,0,0,0,,,0
 Blackstone,India,1,0,0.0,0,0,1,0,0,0,0,,,0
 Bridge,Malaysia,1,0,0.0,0,0,1,0,0,1,0,,,0
 China-headquartered construction and engineering company,Malaysia,1,0,0.0,0,0,1,0,0,0,0,,,0
+Firmus Technologies,Indonesia,1,0,0.0,0,0,1,0,0,0,0,,,0
 Iskandar Investment,Malaysia,1,0,0.0,0,1,0,0,0,1,1,,,0
 Keppel,Malaysia,1,0,0.0,0,0,1,0,0,1,0,,,0
 Maxland Bhd's wholly-owned subsidiary Maxland Data,Malaysia,1,0,0.0,0,0,1,0,0,0,0,,,0
 Oracle,Malaysia,1,0,0.0,0,0,1,0,0,0,0,,,0
+PT Indonesia Super Corridor (ISC),Indonesia,1,0,0.0,0,0,1,0,0,1,0,,,0
 Pearl Computing Malaysia,Malaysia,1,0,0.0,0,0,1,0,0,0,0,,,0
 STACK Infrastructure,Malaysia,1,0,0.0,0,0,1,0,0,0,0,,,0
 STT Global Data Centres India Private,India,1,0,0.0,0,0,1,0,0,0,0,,,0

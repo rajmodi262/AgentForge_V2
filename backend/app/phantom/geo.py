@@ -76,7 +76,6 @@ STATES = {
     "West Bengal": ("West Bengal", "India", 22.9868, 87.8550, ["west bengal"]),
     "Odisha": ("Odisha", "India", 20.9517, 85.0985, ["odisha", "orissa"]),
     "Rajasthan": ("Rajasthan", "India", 27.0238, 74.2179, ["rajasthan"]),
-    "Singapore": ("Singapore", "Singapore", 1.3521, 103.8198, ["singapore"]),
 }
 PLACES.update({k: v for k, v in STATES.items() if k not in PLACES})
 _STATE_ALIAS = sorted(((a, canon) for canon, v in STATES.items() for a in v[4]), key=lambda x: -len(x[0]))
@@ -96,10 +95,10 @@ def resolve_place(*texts: Optional[str]) -> Optional[str]:
 
 _IN = re.compile(r"\bindia\b|\bindian\b|₹|\brs\.?\s?\d|\bcrore\b|\blakh\b|maharashtra|tamil nadu|telangana|uttar pradesh|karnataka", re.I)
 _MY = re.compile(r"\bmalaysia\b|\bmalaysian\b|\bringgit\b|\brm\s?\d|\bjohor\b|selangor|\btnb\b|tenaga nasional|bursa", re.I)
-_SG = re.compile(r"\bsingapore\b|\bsingaporean\b|\bs\$\s?\d|\bsgd\b|\bimda\b|\bedb\b|\bsp group\b|\bjurong\b|\btuas\b|\bloyang\b", re.I)
+_SG = re.compile(r"\bsingapore\b(?![- ]?(?:based|headquartered|listed|incorporated)|'s|’s)|\bsingaporean\b|\bs\$\s?\d|\bsgd\b|\bimda\b|\bedb\b|\bsp group\b|\bjurong\b|\btuas\b|\bloyang\b", re.I)
 _ID = re.compile(r"\bindonesia\b|\bindonesian\b|\brupiah\b|\brp\s?\d|\bjakarta\b|\bbatam\b|\bbekasi\b|\bcikarang\b|\bpln\b|\bbkpm\b", re.I)
 SIGNALS = {"India": _IN, "Malaysia": _MY, "Singapore": _SG, "Indonesia": _ID}
-_OTHER = re.compile(r"\b(thailand|bangkok|vietnam|philippines|japan|australia|united states|u\.s\.|europe|finland|nurmij\w*|sweden|norway|denmark|ireland|germany|netherlands|spain|united kingdom|hong kong|china|taiwan|korea|philippine|manila|tokyo|saitama|osaka|trinidad|tobago|seoul|pohang|sydney|melbourne|texas|virginia|oregon|ohio|arizona|wyoming|idaho|nevada|indiana|louisiana|tennessee|wisconsin|michigan|pennsylvania|new jersey|california|illinois|iowa|london|uk|france|paris|frankfurt|amsterdam|dublin|madrid|italy|milan|cordoba|argentina|brazil|chile|mexico|canada|saudi|uae|dubai|abu dhabi|qatar|africa|nigeria|kenya)\b", re.I)
+_OTHER = re.compile(r"\b(thailand|bangkok|vietnam|philippines|japan|australia|australian|aud|a\$|united states|u\.s\.|europe|finland|nurmij\w*|sweden|norway|denmark|ireland|germany|netherlands|spain|united kingdom|hong kong|china|taiwan|korea|philippine|manila|tokyo|saitama|osaka|trinidad|tobago|seoul|pohang|sydney|melbourne|texas|virginia|oregon|ohio|arizona|wyoming|idaho|nevada|indiana|louisiana|tennessee|wisconsin|michigan|pennsylvania|new jersey|california|illinois|iowa|london|uk|france|paris|frankfurt|amsterdam|dublin|madrid|italy|milan|cordoba|argentina|brazil|chile|mexico|canada|saudi|uae|dubai|abu dhabi|qatar|africa|nigeria|kenya)\b", re.I)
 
 
 def infer_country(*texts: Optional[str]) -> Optional[str]:
@@ -123,3 +122,12 @@ def coords(place: Optional[str], country: Optional[str]) -> Tuple[Optional[str],
         lat, lon = COUNTRY_CENTRE[country]
         return None, None, lat, lon
     return None, None, None, None
+
+
+# The city-state as a place. Deliberately NOT an alias: "Singapore" in running text is usually a company's
+# origin ("Singapore-based PDG builds in Johor"). Only a mention whose own city / state field says Singapore gets it.
+PLACES["Singapore"] = ("Singapore", "Singapore", 1.3521, 103.8198, [])
+
+
+def field_place(city, state):
+    return "Singapore" if any((x or "").strip().lower() == "singapore" for x in (city, state)) else None

@@ -301,3 +301,12 @@ def test_placeless_projects_need_their_own_country_evidence_and_states_are_a_fal
     ])]
     assert any("Lodha" in n for n in names) and len([n for n in names if "Sify" in n]) == 1   # state-level and city mention merge
     assert not any(x in " ".join(names) for x in ("Matador", "LHR2", "Multiple", "Nxtra"))
+
+
+def test_singapore_needs_its_own_city_field_not_a_company_origin():
+    from app.phantom.geo import field_place, infer_country, resolve_place
+    from app.phantom.resolve import code_country
+    assert infer_country("Singapore-based Princeton Digital Group expands in Johor, RM1 billion") == "Malaysia"
+    assert resolve_place("a Singapore-headquartered operator") is None and resolve_place("a campus in Tuas") == "Jurong"
+    assert field_place("Singapore", None) == "Singapore" and field_place("Johor", "Singapore investors") is None
+    assert code_country("JH1") == "Malaysia" and code_country("JC3") == "Indonesia" and code_country("TY1") is None

@@ -30,7 +30,7 @@ from app.phantom.extract import MAX_CHARS, extract_article, gazetteer_developer,
 from app.phantom.geo import coords, infer_country, resolve_place
 from app.phantom.models import PhAnomaly, PhArticle, PhEvidence, PhMention, PhProject, PhRun
 from app.phantom.power import drop_shared, mine_power
-from app.phantom.resolve import resolve
+from app.phantom.resolve import code_country, facility_code, resolve
 from app.phantom.verify import event_fits, norm, quote_found
 from app.phantom.sources import REGIONS, fetch_all, search, seed_queries
 from app.phantom.store import pending_articles, save_articles, save_mentions
@@ -107,6 +107,8 @@ def rebuild_projects() -> Dict[str, Any]:
         for c in clusters:  # a known place settles the country
             if c["place"] in PLACES:
                 c["country"] = PLACES[c["place"]][1]
+            elif code_country(facility_code(c["name"])):
+                c["country"] = code_country(facility_code(c["name"]))
         clusters = [c for c in clusters if c["country"] in in_scope]
         for c in clusters:
             reality, breakdown = S.reality(c, now)

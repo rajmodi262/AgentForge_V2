@@ -26,7 +26,7 @@ from typing import Any, Dict, List, Optional
 from rapidfuzz import fuzz
 
 from app.phantom.extract import KNOWN_DEVELOPERS
-from app.phantom.geo import resolve_place
+from app.phantom.geo import field_place, resolve_place
 
 _CODE = re.compile(r"\b([A-Z]{2,4}\s?\d{1,2}[A-Z]?)\b")
 _BASIS_RANK = {"IT": 0, "facility": 1, "campus": 2, "unknown": 3, None: 3}
@@ -123,8 +123,20 @@ def _strip_place(core: str, place: Optional[str]) -> str:
     return " ".join(w for w in core.split() if w not in pw)
 
 
-FOREIGN_CODES = {"LHR", "LON", "LD", "FRA", "FR", "PAR", "AMS", "DUB", "MAD", "MIL", "TY", "TYO", "NRT", "OSA", "SEL", "ICN", "SG", "SIN", "HK", "HKG",
-                 "SYD", "MEL", "JKT", "CGK", "BKK", "MNL", "IAD", "DFW", "PHX", "SJC", "ORD", "ATL", "NYC"}
+# operators number sites by city / airport code: the code settles the country when the text is ambiguous
+CODE_COUNTRY = {"JH": "Malaysia", "JHB": "Malaysia", "KUL": "Malaysia", "MY": "Malaysia", "CJ": "Malaysia", "KL": "Malaysia",
+                "SG": "Singapore", "SIN": "Singapore", "JC": "Indonesia", "JK": "Indonesia", "JKT": "Indonesia", "CGK": "Indonesia",
+                "MUM": "India", "BOM": "India", "MAA": "India", "CHN": "India", "HYD": "India", "DEL": "India", "BLR": "India",
+                "NOI": "India", "PNQ": "India", "NCR": "India"}
+
+
+def code_country(code: Optional[str]) -> Optional[str]:
+    m = re.match(r"[A-Z]+", code or "")
+    return CODE_COUNTRY.get(m.group(0)) if m else None
+
+
+FOREIGN_CODES = {"LHR", "LON", "LD", "FRA", "FR", "PAR", "AMS", "DUB", "MAD", "MIL", "TY", "TYO", "NRT", "OSA", "SEL", "ICN", "HK", "HKG",
+                 "SYD", "MEL", "BKK", "MNL", "IAD", "DFW", "PHX", "SJC", "ORD", "ATL", "NYC"}
 
 
 def _place_fits(a: str, b: str) -> bool:
@@ -175,7 +187,8 @@ def resolve(mentions: List[Dict[str, Any]], decisions: Optional[Dict[Any, str]] 
         prepared.append({
             **row, "dev": dev, "code": code, "country": d.get("country"),
             "place": d["_place"] if "_place" in d else  # precomputed in seed snapshots (no article context there)
-                     resolve_place(d.get("city"), d.get("state"), d.get("project_name"), d.get("details_quote"), *(d.get("context") or [])),
+                     (resolve_place(d.get("city"), d.get("state"), d.get("project_name"), d.get("details_quote"), *(d.get("context") or []))
+                      or field_place(d.get("city"), d.get("state"))),
             "cap": d.get("capacity_mw"), "core": name_core(d.get("project_name"), dev),
         })
         prepared[-1]["core"] = _strip_place(prepared[-1]["core"], prepared[-1]["place"])

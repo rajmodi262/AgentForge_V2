@@ -78,7 +78,7 @@ def export(path: Path = SEED_FILE, db=None) -> Dict[str, int]:
     own = db is None
     db = db or SessionLocal()
     try:
-        from app.phantom.geo import resolve_place
+        from app.phantom.geo import field_place, resolve_place
         from app.phantom.pipeline import _load_mentions
 
         # Final, verified view of each mention (LLM events re-verified + miner events), computed while
@@ -96,7 +96,7 @@ def export(path: Path = SEED_FILE, db=None) -> Dict[str, int]:
                     data = final.get(r.id, d["data"] or {})
                     # the resolver reads the article context to place a project; keep only its answer
                     place = resolve_place(data.get("city"), data.get("state"), data.get("project_name"),
-                                          data.get("details_quote"), *(data.get("context") or []))
+                                          data.get("details_quote"), *(data.get("context") or []))                         or field_place(data.get("city"), data.get("state"))
                     d["data"] = {**{k: v for k, v in data.items() if k not in DROP_MENTION_DATA}, "_place": place, "_frozen": True}
                 rows.append(d)
             snap[name] = rows

@@ -1,6 +1,8 @@
 ﻿project_id,kind,severity,message
 5c7280af-400e-547a-810a-f2cf12b09af1,stale,low,No news for 100 months
+c7805f49-8677-5200-a3f0-89ca0db0c058,stale,low,No news for 92 months
 1d2df57c-c5ed-505d-8bf9-ab9cdf6c0d7a,stale,low,No news for 81 months
+b4d3cd8d-6668-5f55-b6a0-14cdfbf31357,stale,low,No news for 79 months
 607cdcdc-3600-5184-91cd-82d28d0208dc,capacity_conflict,high,Capacity cut: sources report 140–200 MW (campus basis)
 607cdcdc-3600-5184-91cd-82d28d0208dc,stale,low,No news for 59 months
 f23445e2-df74-5291-b316-9bb3f87c3b8d,capacity_conflict,medium,Capacity raised: sources report 180–250 MW (campus basis)
@@ -15,11 +17,15 @@ d21de76e-b304-5d47-af3f-8cbe0bdb7d42,stale,low,No news for 70 months
 2c84a190-69b1-57b6-8abd-45946b32b52e,negative_signal,high,"Opposition: Despite multiple protests, the construction on-site is underway. WUT members have met Thane municipal authorities, forwarded their concerns to the industries ministry and garnered former Environment minister Aaditya Thackeray. They plan to approach the National Green Tribunal (NGT) if talks fail."
 2c84a190-69b1-57b6-8abd-45946b32b52e,negative_signal,high,"Opposition: Despite multiple protests, the construction on-site is underway. WUT members have met Thane municipal authorities, forwarded their concerns to the industries ministry and garnered former Environment minister Aaditya Thackeray. They plan to approach the National Green Tribunal (NGT) if talks fail."
 f10aa979-8023-5414-9bc5-cc45940f85f8,stale,low,No news for 65 months
-56690d9b-3515-5a2e-8c1b-46fe04603059,stale,low,No news for 65 months
+b17537a0-7156-5537-a388-23ef7b895273,stale,low,No news for 65 months
 ab383841-c576-5616-9b5d-28745620a751,stale,low,No news for 65 months
+c0af49f7-c0cb-5da1-b08d-8a865ecae1b8,stale,low,No news for 63 months
+f2a41143-c415-5f23-8f8e-43fbe8be6df5,stale,low,No news for 63 months
+16e0a1a3-ab1b-53c6-a4f6-82e318b1fbc7,stale,low,No news for 63 months
 32590afe-7d9e-5ceb-8471-4935d55f127f,stale,low,No news for 63 months
 6c36da0a-4cba-5542-9763-650fa35bad09,stale,low,No news for 62 months
 28cb3dee-1974-560c-939d-35dd9b46cfc7,stale,low,No news for 62 months
+d42dee78-8165-5594-837a-60e0a0934252,stale,low,No news for 61 months
 d445a45b-f53b-5f75-abee-500546ac4662,stale,low,No news for 60 months
 edeb595c-65f3-5e2a-a4ef-7806703c5f71,stale,low,No news for 59 months
 69ec1115-188f-5953-a695-e62555a55641,stale,low,No news for 59 months
@@ -32,15 +38,19 @@ bdeea14d-1ce5-58ee-a899-5d45ea43da9c,stale,low,No news for 56 months
 6a2fc89d-17d5-53d9-9ef5-24315efe2b4c,stale,low,No news for 55 months
 643cd7ce-a803-5bac-8625-2c239dfb2334,stale,low,No news for 55 months
 ef10f4c2-a625-506e-a4ae-35bdad398fa0,stale,low,No news for 23 months
+3207827e-00a6-59be-9b36-3505b0ce79ad,stale,low,No news for 23 months
 92cd5645-6aad-5696-8544-36131470e54f,stale,low,No news for 54 months
 c909d8e0-1675-575c-9bd6-8bae1c44c963,stale,low,No news for 38 months
 07aeb7bc-60f1-5369-b89f-0a461c6cd818,stale,low,No news for 52 months
 7e08241f-b353-5640-a562-2a707cf158c6,stale,low,No news for 41 months
 9fdd1f81-b1ee-510c-80de-c871a16e2002,stale,low,No news for 51 months
 df0b664d-2cb0-5b5d-8289-b38fc24cbff7,stale,low,No news for 49 months
+fd2437eb-cc39-5fb0-bf2d-90f64afc7e5a,stale,low,No news for 49 months
+08ff7d91-f71c-5cdd-9a7f-c5dca271ac96,stale,low,No news for 48 months
 fb907101-e5ee-5481-99ab-a4ff185852c4,stale,low,No news for 14 months
 8ad41c10-a39d-59c1-a139-8f560667037f,capacity_conflict,medium,Capacity raised: sources report 25–50 MW (facility basis)
 8ad41c10-a39d-59c1-a139-8f560667037f,capacity_conflict,medium,Capacity raised: sources report 48–150 MW (campus basis)
+d769824b-abd5-54d8-b57f-1b32e90a9152,stale,low,No news for 47 months
 b3bd8cc0-e289-576d-b1a5-cc374efb35c6,capacity_conflict,medium,Capacity raised: sources report 50–150 MW (facility basis)
 7eba387c-c262-591f-b473-b65c3a56f08e,stale,low,No news for 43 months
 793b869c-eb22-54e5-b282-bdf80d13daee,stale,low,No news for 43 months
@@ -50,25 +60,36 @@ b3bd8cc0-e289-576d-b1a5-cc374efb35c6,capacity_conflict,medium,Capacity raised: s
 fb546fde-6f84-5a8b-b854-5043c5a58811,capacity_conflict,medium,Capacity raised: sources report 120–166 MW (campus basis)
 92d5cd6d-5030-526f-8b13-f51fe2f4cb4b,capacity_conflict,medium,Capacity raised: sources report 60–198.8 MW (campus basis)
 204ea273-9f86-5438-9aa6-4c54593e6c32,stale,low,No news for 37 months
-da669779-0a26-58a7-95b4-f31034bd7bac,stale,low,No news for 41 months
+e5cf7766-4e99-5e4f-b102-9052ca30fb0d,stale,low,No news for 42 months
+da669779-0a26-58a7-95b4-f31034bd7bac,stale,low,No news for 42 months
 7500d613-8347-5772-b7b0-054c92947237,stale,low,No news for 41 months
 72e9e32a-fa46-5f8b-90d6-eb46d98108d8,stale,low,No news for 41 months
 c83f36ae-039f-582d-b202-994d476318ee,stale,low,No news for 41 months
+1a594bc5-d44d-5e9a-b267-0bafa0f94da3,stale,low,No news for 41 months
+d373e2df-4ce4-5240-a592-c7b1f2e3bae4,stale,low,No news for 41 months
+c223683d-4be5-59bb-83aa-f763cfee7a95,stale,low,No news for 40 months
+4106614a-606d-5c50-a496-89e6ae70eee5,stale,low,No news for 39 months
 ba2ca6f3-d4b0-5bb3-92cd-0dc1b4b63d17,stale,low,No news for 38 months
 c48367b0-7b77-54ce-839e-3fe03a6e12c9,stale,low,No news for 37 months
 cf7d9c4d-2f31-5a4c-b8a0-94e06aa9a735,stale,low,No news for 37 months
 aae9e7b3-c7a3-5f84-9574-a49e249937b3,stale,low,No news for 36 months
 16dd7f9f-d03a-5be3-9540-7f8d434e8390,stale,low,No news for 34 months
+8f824cd2-6fa0-5d74-b471-1ed0f192775d,stale,low,No news for 33 months
+1ba29616-fdb3-5eac-aaf3-198ab7581eb8,stale,low,No news for 33 months
+2d3883c4-1055-5694-81cb-15ce4217266a,stale,low,No news for 33 months
+8ce7e678-a2a2-54d1-9382-80e104100ee3,stale,low,No news for 32 months
 8ff2d271-79f5-5e62-afa6-35d8046f3752,stale,low,No news for 32 months
 a1cbbd64-c1f9-5cb6-ae35-d1db2458c824,stale,low,No news for 31 months
-4443847b-a684-5bec-a02e-4d08556b884d,stale,low,No news for 29 months
+4443847b-a684-5bec-a02e-4d08556b884d,stale,low,No news for 27 months
 4c6e7e75-e52f-5e08-9df1-0b5292a27034,stale,low,No news for 28 months
+b438ee98-1158-54d9-bfbe-d17a2a598870,stale,low,No news for 27 months
+5e7e92cc-f451-50e3-a0e9-cd4610b15e72,stale,low,No news for 26 months
 59b62fbc-939f-58a1-a683-8b03e8e3b590,stale,low,No news for 26 months
 2e2502e4-a626-53af-9e19-ef760595caee,stale,low,No news for 25 months
 669d53f3-face-5495-a624-1aa6d33a4ab0,stale,low,No news for 23 months
 1c0988cd-06b4-5ca1-8694-ef759ead3b68,stale,low,No news for 23 months
-979c3fe9-59f5-5fd0-b0f3-f9fb6af5a665,stale,low,No news for 24 months
-21d85b62-ca58-5d40-ac10-226214c9ba6b,stale,low,No news for 15 months
+979c3fe9-59f5-5fd0-b0f3-f9fb6af5a665,stale,low,No news for 25 months
+21d85b62-ca58-5d40-ac10-226214c9ba6b,stale,low,No news for 16 months
 b040f211-de13-5feb-9b91-f67d793c525a,stale,low,No news for 24 months
 3106fa6d-bf8f-5266-9ef0-8fa0a8250c2f,stale,low,No news for 24 months
 752f02a7-9be9-5a1e-a6ea-33827bbf20fa,stale,low,No news for 24 months
@@ -81,9 +102,10 @@ ffc861c8-dd70-525f-926e-d193e5bd8798,stale,low,No news for 23 months
 ad74b985-09a1-5373-aa58-1ee4793f23e6,stale,low,No news for 22 months
 21a82206-b3cc-53a6-beb6-7b5c6ed1e2ee,stale,low,No news for 22 months
 12a59963-9081-5a9e-bb73-5cf422088626,stale,low,No news for 22 months
-938632f8-acb5-5910-8175-0370fd0b6875,stale,low,No news for 22 months
 cfe1b53c-738b-52a3-afb3-d76ea2a4a9a1,stale,low,No news for 21 months
 7377b238-3800-5216-9a30-cc3fac07932f,stale,low,No news for 21 months
+40e93cee-51e2-5584-82c0-a487f428e95b,stale,low,No news for 19 months
+d60bd385-d620-5089-a1a8-60d420ca591b,stale,low,No news for 20 months
 d08e0adf-e5d2-5fce-a9ce-38ce47cc2342,stale,low,No news for 19 months
 39bad20e-896e-584b-a2ca-2553b7856f35,stale,low,No news for 19 months
 08d833ee-015c-5c59-8ddc-29ad5e6b7f1a,stale,low,No news for 19 months
@@ -91,9 +113,10 @@ d08e0adf-e5d2-5fce-a9ce-38ce47cc2342,stale,low,No news for 19 months
 fb745cbc-b281-59ab-bc7d-483a849fc5a6,stale,low,No news for 18 months
 049edaa6-4a89-57e2-9dae-3a398974b2ed,stale,low,No news for 18 months
 953f35b3-614f-52c1-9937-fdd9971716a5,stale,low,No news for 17 months
-532a80df-7cdd-5ecb-ba5b-a3280dc6f855,stale,low,No news for 14 months
-685dc256-4467-5952-b505-15274589f9ff,stale,low,No news for 14 months
+532a80df-7cdd-5ecb-ba5b-a3280dc6f855,stale,low,No news for 15 months
+685dc256-4467-5952-b505-15274589f9ff,stale,low,No news for 15 months
 837a6cc4-ace8-5ed8-8ee5-c6f9ff6bbf9f,stale,low,No news for 16 months
+896b81bf-a626-5bfa-bd86-2b02842b689a,stale,low,No news for 16 months
 f875b0b6-f5d2-5fa1-aa00-d76234640477,negative_signal,high,Opposition: null
 f875b0b6-f5d2-5fa1-aa00-d76234640477,negative_signal,high,"Opposition: Critics say they will add demand to electricity grids still heavily reliant on planet-warming fossil fuels, and place new pressure on often-stretched local water supplies to cool down hot servers."
 f875b0b6-f5d2-5fa1-aa00-d76234640477,negative_signal,high,Opposition: Residents who fear the impact on the environment and their lives have raised concerns.
@@ -102,9 +125,9 @@ f875b0b6-f5d2-5fa1-aa00-d76234640477,negative_signal,high,Opposition: Opposition
 f875b0b6-f5d2-5fa1-aa00-d76234640477,negative_signal,high,Opposition: Opposition (stage language in the article)
 f875b0b6-f5d2-5fa1-aa00-d76234640477,negative_signal,high,Opposition: Critics are calling for a moratorium on new data centres until more environmental evidence emerges.
 d6f17a2b-4716-52b1-b7b0-98ffc407040d,stale,low,No news for 15 months
-12556b81-9ba1-5c08-b817-653449c9d252,stale,low,No news for 14 months
-74b90f2a-1ec8-56ff-aeed-cc9feb0345fc,stale,low,No news for 14 months
-5370fd24-a274-5759-b631-c656bc6e5895,stale,low,No news for 14 months
+12556b81-9ba1-5c08-b817-653449c9d252,stale,low,No news for 15 months
+74b90f2a-1ec8-56ff-aeed-cc9feb0345fc,stale,low,No news for 15 months
+5370fd24-a274-5759-b631-c656bc6e5895,stale,low,No news for 15 months
 cc0418d4-55f2-5b86-9bfd-f05a411a199f,stale,low,No news for 14 months
 a1d2ff87-946d-5bd5-bedd-5ea9bb6f3f67,stale,low,No news for 14 months
 5558d1a5-133a-5638-8247-0d128fbaa89e,stale,low,No news for 14 months
@@ -113,6 +136,9 @@ a1d2ff87-946d-5bd5-bedd-5ea9bb6f3f67,stale,low,No news for 14 months
 094c716d-db3b-517c-835a-3d983b760c70,stale,low,No news for 13 months
 c14a4e62-8058-5442-8392-e65145c67fb0,stale,low,No news for 12 months
 e90c99d3-5121-5052-a0a8-1dc406c3547e,stale,low,No news for 12 months
+64d9d3a7-b8d6-519b-8903-c8e30aa71cf0,stale,low,No news for 12 months
+da0a3892-104d-55f2-a70b-2f8bfe0ae857,negative_signal,high,"Delayed: The West Java administration has suspended the construction of a data center in Jatiluhur, Purwakarta regency, West Java amid concerns over its environmental impact and pressure on local water reserves."
+d0c7790c-6783-5435-8cab-1e1903a27280,negative_signal,high,"Opposition: residents in Nongsa district have grown increasingly frustrated with worsening access to clean water and staged protests over the past two months, blocking access to Nongsa Digital Park on Monday (Oct 5). Protesters agreed to disperse after a BP Batam official promised to restore piped water supplies within two days and ordered six water tanker trucks to deliver water to affected neighbourhoods as a temporary measure. If this issue is not resolved soon and the disruption happens again, we will stage further protests,"
 2884219a-d888-5cf4-b928-f981a603fa01,negative_signal,high,Opposition: Opposition (stage language in the article)
 ced9e97d-022d-568a-9945-ac7b0956af57,negative_signal,high,"Opposition: Despite multiple protests, the construction on-site is underway. WUT members have met Thane municipal authorities, forwarded their concerns to the industries ministry and garnered former Environment minister Aaditya Thackeray. They plan to approach the National Green Tribunal (NGT) if talks fail."
 877c8b59-b2db-53ef-a080-5ecd16abe27b,capacity_conflict,medium,Capacity raised: sources report 40–55 MW (facility basis)

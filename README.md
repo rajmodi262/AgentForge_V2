@@ -4,7 +4,7 @@
 
 ### Every data centre announced is a promise. This tells you which ones are real.
 
-**An agentic intelligence engine that reads the news on 395 data-centre projects across India and Malaysia, verifies every claim against its source, maps who actually has power, and then tests its own predictions against what happened, including the ones it got wrong.**
+**An agentic intelligence engine that reads the news on 451 data-centre projects across India, Malaysia, Singapore and Indonesia, verifies every claim against its source, maps who actually has power, and then tests its own predictions against what happened, including the ones it got wrong.**
 
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
@@ -12,7 +12,7 @@
 ![React](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![Three.js](https://img.shields.io/badge/Three.js-globe-000000?style=for-the-badge&logo=three.js&logoColor=white)
 ![Ollama](https://img.shields.io/badge/Local_LLM-qwen2.5:7b-white?style=for-the-badge)
-![Tests](https://img.shields.io/badge/tests-199_passing-10b981?style=for-the-badge)
+![Tests](https://img.shields.io/badge/tests-202_passing-10b981?style=for-the-badge)
 ![Power BI](https://img.shields.io/badge/Power_BI-F2C811?style=for-the-badge&logo=powerbi&logoColor=black)
 
 <br/>
@@ -29,13 +29,13 @@
 
 | | |
 |---|---|
-| 📰 **Articles read** | **2,096** news articles from Bing News, Google News, GDELT and Firecrawl (703 in full text) |
-| 🏗️ **Projects resolved** | **395** India + Malaysia data-centre projects, de-duplicated from 1,487 verified mentions |
-| ⚡ **Announced → likely** | **72.8 GW announced → 30.7 GW reality-weighted (42%)**. About 42 GW is phantom risk |
+| 📰 **Articles read** | **2,678** news articles from Bing News, Google News, GDELT and Firecrawl (783 in full text) |
+| 🏗️ **Projects resolved** | **451** projects (India 285 · Malaysia 113 · Indonesia 45 · Singapore 8), de-duplicated from 1,585 verified mentions |
+| ⚡ **Announced → likely** | **78.2 GW announced → 31.3 GW reality-weighted (40%)**. About 47 GW is phantom risk |
 | 🔌 **Secured power** | Only **13%** of announced capacity is operating or has a verified grid agreement |
-| ✅ **Fact-checker** | **98.6%** of 4,982 planted errors caught, **0** false rejections in 2,235 untouched fields |
+| ✅ **Fact-checker** | **98.5%** of 5,301 planted errors caught, **0** false rejections in 2,392 untouched fields |
 | 🎯 **Recall** | **89%** of 36 pipeline sites from four published lists found |
-| 📉 **Backtest** | 333 cases replayed at four cutoffs. Calibrated once construction starts; **no predictive skill before it.** [Why that's the most useful result →](#-the-honest-part) |
+| 📉 **Backtest** | 426 cases replayed at four cutoffs. Calibrated once construction starts; **no predictive skill before it.** [Why that's the most useful result →](#-the-honest-part) |
 
 ---
 
@@ -48,7 +48,7 @@
 </tr>
 <tr>
 <td><img src="docs/screenshots/05-prediction-replay.png" alt="Prediction replay"/><br/><b>Prediction replay.</b> Stand at a past cutoff, see what the score said using only the news published by then, then reveal what happened.</td>
-<td><img src="docs/screenshots/06-what-if.png" alt="What-if"/><br/><b>What-if.</b> Sixteen sliders over every prior and adjustment re-score all 395 projects in the browser, with the scorer's own formula.</td>
+<td><img src="docs/screenshots/06-what-if.png" alt="What-if"/><br/><b>What-if.</b> Sixteen sliders over every prior and adjustment re-score every project in the browser, with the scorer's own formula.</td>
 </tr>
 <tr>
 <td><img src="docs/screenshots/07-calibration-lab.png" alt="Calibration lab"/><br/><b>Calibration lab.</b> Reliability diagram, the score against three simpler rules, and every claim compared with the base rate.</td>
@@ -102,13 +102,13 @@ History is replayed at four cutoffs (mid-2022 to mid-2025). At each one, every p
 | What was tested | Result |
 |---|---|
 | Projects already under construction when scored | ✅ **Well calibrated**: high scores come true. The score sizes the real pipeline. |
-| Projects not yet under construction (the fair test, out of sample) | ❌ **AUC 0.47, a coin flip.** Brier 0.182 vs 0.184 for a flat 35%. |
-| "Phantom risk" calls before construction | ≈ 80% right, but 80% of all such projects never progressed. **No better than chance.** |
-| Re-fitting the priors on outcomes | Did not help out of sample. |
+| Projects not yet under construction (the fair test: 208 cases, out of sample) | ❌ **AUC 0.57, interval 0.42–0.70: not distinguishable from a coin flip.** Brier 0.146: better than a flat 35% (0.172), worse than the hindsight base rate (0.137). |
+| "Phantom risk" calls before construction | 84% right, but 84% of all such projects never progressed. **No better than chance.** |
+| Re-fitting the priors on outcomes | Did not help out of sample (fitted 0.146 vs stated 0.143). |
 
 **What it means.** The news published before ground is broken does not carry the signal that separates real projects from talk. No amount of model tuning fixes that. The signal lives in **filings**: supply agreements, environmental clearances and land records. That is the next data source, and the backtest harness is ready to measure whether it works.
 
-An earlier version reported "Brier 0.097, twice as good as the base rate". That number came from too few cases and an easy subset. More data exposed it, and this README replaces it. Full detail is in [`PHANTOM_EVAL.md`](PHANTOM_EVAL.md) §6.
+An earlier version reported "Brier 0.097, twice as good as the base rate". That number came from too few cases and an easy subset. As the backtest grew (233 → 333 → 426 cases) the pre-construction ranking moved 0.59 → 0.47 → 0.57, every time with an interval that includes a coin flip. The noise is the finding. Full detail is in [`PHANTOM_EVAL.md`](PHANTOM_EVAL.md) §6.
 
 ---
 
@@ -133,12 +133,12 @@ An earlier version reported "Brier 0.097, twice as good as the base rate". That 
 
 | Test | What it proves | Result |
 |---|---|---|
-| **Planted errors** | Real mentions corrupted field by field, re-verified | 98.6% caught, 0 false rejections |
+| **Planted errors** | Real mentions corrupted field by field, re-verified | 98.5% caught, 0 false rejections |
 | **Evidence audit** | Random verified quotes graded: right stage, right project? | 62.5% → **77.5%** on a fresh sample *(first-pass AI labels; human relabelling pending)* |
 | **Recall** | 42 sites from Wikipedia, Black Ridge, Mordor, DCK | **89%** of pipeline sites found |
 | **Coverage-agent ablation** | What the agentic loop adds over fixed queries | +29 projects from 32 self-written queries |
 | **Calibration backtest** | Does the score mean what it says? | See [The honest part](#-the-honest-part) |
-| **Unit tests** | Verifier, resolver, power rules, merge queue, import, backtest maths | **199 passing** (no LLM, no network) |
+| **Unit tests** | Verifier, resolver, power rules, merge queue, import, backtest maths | **202 passing** (no LLM, no network) |
 
 Every number on this page is regenerated by a script: `python -m app.phantom.evaluate`, `python -m app.phantom.analysis`, `python -m app.phantom.backtest`.
 
@@ -160,7 +160,7 @@ uvicorn app.main:app --port 8000                       # first start loads the r
 cd AgentForge_V2/frontend && npm install && npm run dev  # open http://localhost:5180/phantom and register
 ```
 
-On first start the backend fills an empty database from `backend/seed/phantom_seed.json.gz`: 395 projects, 2,096 article records (metadata only, no article bodies), 1,487 verified mentions and 1,303 evidence quotes. Turn it off with `PHANTOM_AUTO_SEED=false`.
+On first start the backend fills an empty database from `backend/seed/phantom_seed.json.gz`: 451 projects, 2,678 article records (metadata only, no article bodies), 1,585 verified mentions and 1,404 evidence quotes. Turn it off with `PHANTOM_AUTO_SEED=false`.
 
 ### Collect fresh data
 
@@ -183,7 +183,7 @@ Install [Ollama](https://ollama.com) and pull `qwen2.5:7b`, then press **Hunt** 
 | **Backend** | FastAPI, SQLAlchemy, SQLite / PostgreSQL, WebSockets, JWT auth, rate limiting |
 | **Frontend** | React 19, TypeScript, Three.js / react-three-fiber, framer-motion, Vite |
 | **Analytics** | openpyxl, matplotlib, SQL, Power BI (PBIP + DAX) |
-| **Quality** | pytest (199), CodeQL, Dependabot, Playwright |
+| **Quality** | pytest (202), CodeQL, Dependabot, Playwright |
 
 ---
 
@@ -220,9 +220,9 @@ Phantom Hunter is built on **AgentForge**, a multi-agent engine where seven spec
 ## ⚠️ Limitations
 
 - **The score is a measuring tool, not a forecaster.** It cannot yet predict which pre-construction projects will be built (see [The honest part](#-the-honest-part)).
-- **Public news only.** It names a power supplier for just 14 of 395 projects. Filings are the next source.
-- **India and Malaysia have data.** Scouts for Singapore and Indonesia are built, but their data has not been collected yet.
-- **56% of projects rest on a single source.** Announced capacity is an upper bound; a few duplicates survive by design for human review.
+- **Public news only.** It names a power supplier for just 14 of 451 projects. A filings scout is built (`targeted.py filings`) and waits on search credits.
+- **Singapore and Indonesia are thin.** One free-feed hunt each: 8 and 45 projects. Singapore's figure is genuinely small (new capacity was frozen for years) and only counts projects the text itself places there, not every "Singapore-based" developer.
+- **57% of projects rest on a single source.** Announced capacity is an upper bound; a few duplicates survive by design for human review.
 - **The evidence audit is AI-labelled** until two people regrade it. The samples are in the repo.
 
 ---
