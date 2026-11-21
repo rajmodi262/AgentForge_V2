@@ -1,456 +1,240 @@
 <div align="center">
 
-# 🤖 AgentForge v2
+# 👻 AgentForge V2 · Phantom Hunter
 
-### Multi-Agent AI Engine · Phantom Hunter data-centre intelligence
+### Every data centre announced is a promise. This tells you which ones are real.
 
-[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/React-18+-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
-[![LangGraph](https://img.shields.io/badge/LangGraph-0.2+-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://langchain-ai.github.io/langgraph/)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
-[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
+**An agentic intelligence engine that reads the news on 395 data-centre projects across India and Malaysia, verifies every claim against its source, maps who actually has power, and then tests its own predictions against what happened, including the ones it got wrong.**
 
-**v2: agents that read the news, verify every claim, and tell you which announced data centres will really get built — with Excel, Google Sheets, Power BI and SQL outputs.**
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![LangGraph](https://img.shields.io/badge/LangGraph-agents-1C3C3C?style=for-the-badge)
+![React](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Three.js](https://img.shields.io/badge/Three.js-globe-000000?style=for-the-badge&logo=three.js&logoColor=white)
+![Ollama](https://img.shields.io/badge/Local_LLM-qwen2.5:7b-white?style=for-the-badge)
+![Tests](https://img.shields.io/badge/tests-199_passing-10b981?style=for-the-badge)
+![Power BI](https://img.shields.io/badge/Power_BI-F2C811?style=for-the-badge&logo=powerbi&logoColor=black)
 
-*v1 (still included): give it a business idea, watch 7 AI agents debate and build a startup blueprint live.*
+<br/>
 
-[Phantom Hunter](#-flagship-module-phantom-hunter) · [Analytics pack](#-analytics-pack-excel--google-sheets--power-bi--sql) · [Features](#-features) · [Architecture](#-architecture) · [Quick Start](#-quick-start) · [Tech Stack](#-tech-stack) · [Demo](#-live-demo)
+![Time machine: the pipeline replayed from 2019 to today](docs/screenshots/time-machine.gif)
 
----
+*The Time machine. Projects appear when first reported and climb the evidence ladder only when verified evidence is published. Most never leave the bottom rung.*
 
 </div>
 
-## 🆕 What's new in v2
+---
 
-| | v1 | v2 |
-|---|---|---|
-| Focus | Startup blueprint from a business idea | **Phantom Hunter** — reality-scored India + Malaysia data-centre pipeline |
-| Data | LLM output + RAG | 2,096 real news articles → 395 resolved projects, each with a power dossier; any CSV list can be scored against them |
-| Trust | Self-critique loop | **Deterministic verifier**: every claim must quote its source (99.7% of planted errors caught) |
-| LLM | Groq / Gemini (API keys) | **Local Ollama qwen2.5:7b** — $0, no keys |
-| Outputs | PDF report | Dashboard + 3D globe + **Excel, Google Sheets, Power BI, SQL** analytics pack |
-| Evaluation | LLM-as-judge | Planted-error test, two-round human audit, coverage-agent ablation |
-| Tests | 117 | **198** |
-
-## 👻 Flagship module: Phantom Hunter
-
-> *Every data centre announced is a promise. Phantom Hunter tells you which promises will keep their power on — and who to call before your competitor does.*
-
-An agentic intelligence system for the **India + Malaysia (Johor) data-centre pipeline**. Scout agents read public news (Bing News, Google News, GDELT); a local LLM (qwen2.5:7b via Ollama) extracts structured evidence; a **deterministic verifier checks every claim against its source text**; mentions are resolved into projects; and each project gets a **transparent reality score** on an evidence ladder (announced → site → approved → **power** → building → live), its **weakest assumption**, anomaly flags, and a **who-to-call** ranking for power, electrical and cooling suppliers.
+## ⚡ The numbers
 
 | | |
 |---|---|
-| **Why** | The market's loudest argument: how much of the announced pipeline is real? (Bernstein ~35% credible; Capgemini ~1 in 5 interconnection requests never materialise). The answer depends on which *evidence layer* a project has reached. |
-| **Core idea** | LLM proposes, verifier disposes — no claim reaches the score without a quote that exists in the article and fits the stage. "Power" means *secured*, never just mentioned. |
-| **UI** | `/phantom` — 3D Reality Globe (announced vs reality-weighted MW), who-to-call, evidence-ladder funnel, cited chat; `/phantom/:id` — the project dossier with Bull vs Bear debate. |
-| **Cost** | $0 — runs on a laptop GPU. |
+| 📰 **Articles read** | **2,096** news articles from Bing News, Google News, GDELT and Firecrawl (703 in full text) |
+| 🏗️ **Projects resolved** | **395** India + Malaysia data-centre projects, de-duplicated from 1,487 verified mentions |
+| ⚡ **Announced → likely** | **72.8 GW announced → 30.7 GW reality-weighted (42%)**. About 42 GW is phantom risk |
+| 🔌 **Secured power** | Only **13%** of announced capacity is operating or has a verified grid agreement |
+| ✅ **Fact-checker** | **98.6%** of 4,982 planted errors caught, **0** false rejections in 2,235 untouched fields |
+| 🎯 **Recall** | **89%** of 36 pipeline sites from four published lists found |
+| 📉 **Backtest** | 333 cases replayed at four cutoffs. Calibrated once construction starts; **no predictive skill before it.** [Why that's the most useful result →](#-the-honest-part) |
 
-📖 Full write-up, design decisions and interview Q&A: **[PHANTOM_HUNTER.md](PHANTOM_HUNTER.md)** · 📊 Evaluation: **[PHANTOM_EVAL.md](PHANTOM_EVAL.md)** · 🛠 Build log: **[PHANTOM_HUNTER_TRACKER.md](PHANTOM_HUNTER_TRACKER.md)**
+---
+
+## 🖥️ The control room
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/01-overview.png" alt="Overview"/><br/><b>Overview.</b> Announced vs real, the 3D Reality Globe and who to call this month.</td>
+<td width="50%"><img src="docs/screenshots/03-power.png" alt="Power"/><br/><b>Power.</b> Secured vs unsecured capacity, the six grid positions as a filter, supplier signals.</td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/05-prediction-replay.png" alt="Prediction replay"/><br/><b>Prediction replay.</b> Stand at a past cutoff, see what the score said using only the news published by then, then reveal what happened.</td>
+<td><img src="docs/screenshots/06-what-if.png" alt="What-if"/><br/><b>What-if.</b> Sixteen sliders over every prior and adjustment re-score all 395 projects in the browser, with the scorer's own formula.</td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/07-calibration-lab.png" alt="Calibration lab"/><br/><b>Calibration lab.</b> Reliability diagram, the score against three simpler rules, and every claim compared with the base rate.</td>
+<td><img src="docs/screenshots/08-workbench.png" alt="Workbench"/><br/><b>Workbench.</b> Paste anyone's project list: each row is matched and scored. Look-alike pairs go to a human merge queue.</td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/10-power-dossier.png" alt="Project dossier"/><br/><b>Project dossier.</b> Evidence ladder, the Investigator agent, and a power diagram: supplier → connection → campus, every fact with its quote.</td>
+<td><img src="docs/screenshots/02-globe-grid.png" alt="Globe by grid position"/><br/><b>Globe by grid position.</b> Energized, agreement signed, power deal, under construction, no evidence.</td>
+</tr>
+</table>
+
+<div align="center">
+<img src="docs/screenshots/11-command-bar.png" width="80%" alt="Command bar"/><br/>
+<b>Ctrl + K</b>: jump to any project or view, or ask the tracker a question and get a cited answer. A <b>▶ Tour</b> button walks a first-time reviewer through every view in 90 seconds.
+</div>
+
+---
+
+## 🧠 How it works
+
+```mermaid
+flowchart LR
+    A[🛰️ Scouts<br/>Bing · Google News · GDELT · Firecrawl<br/>robots.txt respected] --> B[🧾 Extractor<br/>local LLM, whole article,<br/>section by section]
+    B --> C[✅ Verifier<br/>no LLM: every quote must exist,<br/>every number parse, every stage fit]
+    C --> D[⛏️ Evidence + Power miners<br/>deterministic rules on sentences<br/>about the project]
+    D --> E[🧩 Resolver<br/>same project, different names<br/>+ human merge decisions]
+    E --> F[🧮 Scorer<br/>transparent log-odds,<br/>weakest assumption]
+    F --> G[📊 Control room · Excel · Power BI · SQL]
+    F --> H[🔁 Coverage agent<br/>writes the next round's searches]
+    H --> A
+    F --> I[🔎 Investigator<br/>chases one project's<br/>weakest assumption]
+    I --> A
+```
+
+**The LLM proposes, the verifier decides.** A 7B model on a laptop extracts projects, capacities and stage events. Every claim is then checked by code: does the quote exist in the article, does it describe that stage, is it about *this* project and not another one in the same article? Unsupported claims are dropped.
+
+**The score is a glass box.** `logit(p) = logit(prior[evidence layer]) + Σ named adjustments`. Every term is shown in the UI. The priors were stated assumptions anchored to public figures (Bernstein, Capgemini, Sightline) and were then re-fitted on back-tested outcomes, with shrinkage.
+
+**Power is a first-class field.** A data centre is a power project with servers attached. Each project carries a dossier: grid position, supplier, kV and MVA, substation, on-site generation, renewable procurement, cooling, contractor and financier, each fact with the sentence it came from.
+
+**Agents that decide.** The hunt is a LangGraph loop: plan → scout → extract → resolve → coverage. The coverage agent reads the gaps and writes the next round's queries. The Investigator takes one project, picks the search that would settle its weakest assumption, widens it after a miss, re-scores and stops on its own, streaming every step live.
+
+---
+
+## 🎯 The honest part
+
+Most trackers publish a confidence score. Very few test it. This one does, and publishes the result.
+
+History is replayed at four cutoffs (mid-2022 to mid-2025). At each one, every project is scored using **only the news published by then**, then compared with what verified evidence shows afterwards.
+
+| What was tested | Result |
+|---|---|
+| Projects already under construction when scored | ✅ **Well calibrated**: high scores come true. The score sizes the real pipeline. |
+| Projects not yet under construction (the fair test, out of sample) | ❌ **AUC 0.47, a coin flip.** Brier 0.182 vs 0.184 for a flat 35%. |
+| "Phantom risk" calls before construction | ≈ 80% right, but 80% of all such projects never progressed. **No better than chance.** |
+| Re-fitting the priors on outcomes | Did not help out of sample. |
+
+**What it means.** The news published before ground is broken does not carry the signal that separates real projects from talk. No amount of model tuning fixes that. The signal lives in **filings**: supply agreements, environmental clearances and land records. That is the next data source, and the backtest harness is ready to measure whether it works.
+
+An earlier version reported "Brier 0.097, twice as good as the base rate". That number came from too few cases and an easy subset. More data exposed it, and this README replaces it. Full detail is in [`PHANTOM_EVAL.md`](PHANTOM_EVAL.md) §6.
 
 ---
 
 ## 📊 Analytics pack: Excel · Google Sheets · Power BI · SQL
 
-The dashboard's data, in the tools commercial and analyst teams actually use — all generated by code from the same database, so they never disagree. Details: **[analytics/README.md](analytics/README.md)**.
+<div align="center"><img src="analytics/powerbi/powerbi_report.png" width="85%" alt="Power BI report"/></div>
 
-| Tool | What you get |
+| | |
 |---|---|
-| **Excel** | [`analytics/PhantomHunter.xlsx`](analytics/PhantomHunter.xlsx) — KPI summary (live formulas), filterable tables, colour-scaled reality scores, `SUMIFS`/`COUNTIFS` analysis sheet, native charts. Also the **📊 Excel** button on the dashboard. |
-| **Google Sheets** | Import the workbook or the CSVs; ready-to-paste `QUERY` / `FILTER` formulas in the guide. |
-| **Power BI** | A generated Power BI Project (2 pages: pipeline reality + project explorer) that opens fully built — `python analytics/powerbi/build_pbip.py <folder>`. Star-schema CSVs ([`analytics/data/`](analytics/data/)), 17 DAX measures ([`measures.dax`](analytics/powerbi/measures.dax)), report theme and a 15-minute build guide. |
-| **SQL** | [11 business questions](analytics/sql/phantom_queries.sql) with CTEs and window functions (RANK, ROW_NUMBER, LAG) → [live results](analytics/SQL_RESULTS.md). |
-| **Data analysis** | [8 computed findings + 5 charts](analytics/ANALYSIS.md) |
+| 📗 [`analytics/PhantomHunter.xlsx`](analytics/PhantomHunter.xlsx) | KPIs as live formulas, filterable tables (projects, evidence, power facts, developers, who to call), SUMIFS analysis and native charts. Opens in Google Sheets too. |
+| 🟨 [`analytics/powerbi/`](analytics/powerbi) | PBIP report: theme, DAX measures and the build script |
+| 🗄️ [`analytics/sql/`](analytics/sql) · [`SQL_RESULTS.md`](analytics/SQL_RESULTS.md) | 11 readable queries run against the live database: window functions, partitioned shares, funnels |
+| 📈 [`analytics/ANALYSIS.md`](analytics/ANALYSIS.md) | Findings, power forensics, developer track records and 6 charts, regenerated from the data |
 
-**Headline findings** (from [ANALYSIS.md](analytics/ANALYSIS.md)): only **42%** of the 72.8 GW announced looks real · **13%** has a secured grid position · **72%** of announced capacity is still at announced/site/approved · **56%** of projects rest on a single source · recall vs published lists **89%** · backtest on 333 cases: calibrated once construction evidence exists, **no predictive skill before it** ([PHANTOM_EVAL.md](PHANTOM_EVAL.md) §6).
+<p align="center">
+<img src="analytics/charts/06_grid_position.png" width="48%"/> <img src="analytics/charts/01_capacity_by_stage.png" width="48%"/>
+</p>
 
-<p align="center"><img src="analytics/powerbi/powerbi_report.png" width="820" alt="Phantom Hunter Power BI report"><br><sub>Power BI report generated by <code>analytics/powerbi/build_pbip.py</code> — 2 pages, 17 DAX measures, dark Phantom theme</sub></p>
+---
 
-<p align="center"><img src="analytics/charts/02_phantom_gap_by_region.png" width="640" alt="Phantom gap by region"></p>
+## 🧪 Evaluation, not assertion
+
+| Test | What it proves | Result |
+|---|---|---|
+| **Planted errors** | Real mentions corrupted field by field, re-verified | 98.6% caught, 0 false rejections |
+| **Evidence audit** | Random verified quotes graded: right stage, right project? | 62.5% → **77.5%** on a fresh sample *(first-pass AI labels; human relabelling pending)* |
+| **Recall** | 42 sites from Wikipedia, Black Ridge, Mordor, DCK | **89%** of pipeline sites found |
+| **Coverage-agent ablation** | What the agentic loop adds over fixed queries | +29 projects from 32 self-written queries |
+| **Calibration backtest** | Does the score mean what it says? | See [The honest part](#-the-honest-part) |
+| **Unit tests** | Verifier, resolver, power rules, merge queue, import, backtest maths | **199 passing** (no LLM, no network) |
+
+Every number on this page is regenerated by a script: `python -m app.phantom.evaluate`, `python -m app.phantom.analysis`, `python -m app.phantom.backtest`.
+
+---
+
+## 🚀 Quick start
+
+### See it in 2 minutes: no API key, no GPU
 
 ```bash
-cd backend
-python -m app.phantom.export       # Excel + CSVs
-python -m app.phantom.sql_report   # SQL results
-python -m app.phantom.analysis     # findings + charts
-```
-
----
-
-## 🎯 What is AgentForge?
-
-AgentForge is a **multi-agent AI orchestration system** that turns a raw business idea into a structured startup blueprint. It runs **7 specialized agents** through a LangGraph state machine with real parallel fan-out/fan-in, a multi-step reasoning loop (generate → self-critique → refine), a Board Meeting debate stage that cross-checks the agents against each other, and a **Chief Synthesizer** that weaves the specialists' work and the debate into one coherent blueprint.
-
-> **💡 Example:** You type *"AI-powered fitness coaching app"* → the CEO agent frames it → Research grounds it with live search + RAG → Marketing and Developer run in parallel → Finance prices it from their numbers and a calculator audits the maths → Analytics and Operations build on all of it → the Board Meeting debates the weak points → the Chief Synthesizer composes the final coherent blueprint → you get a PDF covering market sizing, competition, technical architecture, financials, GTM, and operations.
-
-### Honest status (read this first)
-
-This is a portfolio/demo project, built to show real multi-agent orchestration — not a polished commercial SaaS. To keep it truthful:
-
-- **Real LLM by default.** `MOCK_MODE` defaults to **false**. With a (free) API key set, every agent calls a live model.
-- **No key? You still get a working demo** — agents return clearly **simulated** data, and the UI shows a persistent **`⚠ DEMO DATA`** badge plus an inline warning in the live stream. Mock output is never presented as real analysis.
-- **Free to run.** A free [Groq](https://console.groq.com) key (Llama 3.3) drives the whole pipeline at no cost; Gemini Flash and Claude are drop-in alternatives.
-- **What's genuinely implemented:** the LangGraph parallel topology, WebSocket streaming, JWT auth (bcrypt + rate limiting), provider fallback chain, and PDF report generation. See [Limitations](#-limitations) for what's still rough.
-
----
-
-## ✨ Features
-
-| Feature | Description |
-|---------|-------------|
-| 🧠 **7 Autonomous Agents** | CEO, Research, Marketing, Developer, Finance, Analytics, Operations — each with domain-specific prompts and tools |
-| 💎 **Diamond Topology** | Fan-out/fan-in parallel execution via LangGraph state machine (4 agents run simultaneously) |
-| 🔄 **Multi-Step Reasoning** | Each agent runs a 3-step pipeline: Generate → Self-Critique → Refine with confidence scoring |
-| ⚡ **Real-Time Streaming** | WebSocket-powered live visibility into agent thinking, reasoning steps, and inter-agent messages |
-| 🏛️ **Board Meeting Debate** | Unique 4-round cross-functional debate where agents challenge each other's assumptions |
-| 📄 **Auto-Generated Reports** | Beautiful PDF blueprints compiled from all agent outputs with charts and data |
-| 🔐 **JWT Authentication** | Secure user sessions with protected routes and role-based access |
-| 🐳 **Docker Compose** | One-command deployment with PostgreSQL, Redis, and all services containerized |
-
----
-
-## 🏗 Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   PRESENTATION TIER                         │
-│              React + Vite + WebSocket Client                │
-│   ┌──────────┐  ┌──────────────┐  ┌──────────────┐         │
-│   │Dashboard │  │ Live Stream  │  │Report Viewer │         │
-│   └──────────┘  └──────────────┘  └──────────────┘         │
-└─────────────────────────┬───────────────────────────────────┘
-                          │ REST + WebSocket
-┌─────────────────────────┴───────────────────────────────────┐
-│                   APPLICATION TIER                          │
-│              FastAPI + LangGraph + Claude/Gemini            │
-│                                                             │
-│   ┌─────────┐    ┌───────────────┐    ┌──────────────┐     │
-│   │REST API │───▶│  Orchestrator │───▶│  AI Service   │     │
-│   └─────────┘    └───────┬───────┘    └──────────────┘     │
-│                          │                                   │
-│              ┌───────────┼───────────┐                      │
-│              ▼           ▼           ▼                      │
-│         ┌────────┐ ┌────────┐ ┌────────┐                   │
-│         │Research│ │  Dev   │ │Finance │  ... (7 agents)    │
-│         └────────┘ └────────┘ └────────┘                   │
-│                          │                                   │
-│              ┌───────────┴───────────┐                      │
-│              ▼                       ▼                      │
-│        ┌──────────┐          ┌────────────┐                 │
-│        │Board Meet│          │Report Gen  │                 │
-│        └──────────┘          └────────────┘                 │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-┌─────────────────────────┴───────────────────────────────────┐
-│                      DATA TIER                              │
-│           PostgreSQL + Redis + SQLAlchemy ORM               │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 🔀 Agent Pipeline (Dependency-Ordered DAG)
-
-```
-START → CEO → Research → ┬─ Marketing ─┐
-                         └─ Developer ─┘→ Finance → Analytics → Operations → Board Meeting → Synthesis → Report → END
-                       (parallel fan-out)  (fan-in)            (sequential)        (debate)      (editor)
-```
-
-### 🧠 Multi-Step Reasoning (Per Agent)
-
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│  Step 1:     │────▶│  Step 2:     │────▶│  Step 3:     │────▶│  Validate:   │
-│  Generate    │     │  Self-Critique│     │  Refine      │     │  Pydantic    │
-│  (Claude API)│     │  (3 flaws)   │     │  (Fix flaws) │     │  (JSON safe) │
-└──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘
-       │                    │                    │
-   🔴 stream:           🔴 stream:           🔴 stream:
-   agent_thinking       reasoning_step       agent_completed
-```
-
-### 🔄 User Flow Diagram
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User as Startup Founder
-    participant UI as React UI (WebSocket Client)
-    participant API as FastAPI Gateway
-    participant LG as LangGraph Orchestrator
-    participant AG as 7-Agent Cluster
-    participant DB as PostgreSQL Database
-
-    User->>UI: Submits raw startup idea
-    UI->>API: POST /api/blueprint (Initialize Session)
-    API->>DB: Create project record & audit trail
-    API->>LG: Trigger graph orchestration (background task)
-    LG->>UI: Establish WebSocket connection
-    
-    rect rgb(30, 41, 59)
-        note over LG, AG: Dependency-Ordered Execution (parallel where independent)
-        LG->>AG: CEO → Research, then fan-out Marketing ‖ Developer, fan-in to Finance
-        AG-->>UI: Live-stream agent progress, tool calls & reasoning steps via WS
-    end
-
-    rect rgb(15, 23, 42)
-        note over LG, AG: Consensus Debate & Report Generation
-        LG->>AG: Initiate structured 4-Round Board Meeting Debate
-        AG-->>UI: Broadcast inter-agent debate statements
-        LG->>API: Compile final consolidated markdown report
-        API->>DB: Save generated PDF/Markdown blueprint files
-    end
-
-    API-->>UI: Emit workflow completion signal
-    UI->>User: Render 3D debate visualization & enable PDF download
-```
-
----
-
-## 🚀 Quick Start
-
-### ⚡ See Phantom Hunter in 2 minutes (no API key, no GPU)
-
-```bash
-git clone https://github.com/rajmodi262/agentforge-v2.git
-cd agentforge-v2/backend
-python -m venv venv && venv\Scriptsctivate        # macOS/Linux: source venv/bin/activate
+git clone https://github.com/rajmodi262/AgentForge_V2.git
+cd AgentForge_V2/backend
+python -m venv venv && venv\Scripts\activate          # macOS/Linux: source venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --port 8000                       # first start loads the real dataset automatically
-# new terminal
-cd agentforge-v2/frontend && npm install && npm run dev  # open http://localhost:5180/phantom (register first)
 ```
-
-On first start the backend fills the empty database from `backend/seed/phantom_seed.json.gz`: the real 395 projects,
-1,485 article records, 435 verified mentions and 372 evidence quotes (article bodies and user data are not included).
-Turn it off with `PHANTOM_AUTO_SEED=false`; reload any time with `python -m app.phantom.seed --force`.
-To collect fresh data, install [Ollama](https://ollama.com) with `qwen2.5:7b` and press **Hunt India / Hunt Malaysia**. Add a free [Firecrawl](https://firecrawl.dev) key (`FIRECRAWL_API_KEY` in `backend/.env`) and the scouts search and read through Firecrawl — it reads the pages plain HTTP can't (bot walls, Google News redirects), still respecting robots.txt, with a per-run credit cap. `python -m app.phantom.refetch 50` upgrades stored headline-only articles to full text.
-
-### Prerequisites (full AgentForge)
-
-- Python 3.11+
-- Node.js 18+
-- Docker & Docker Compose (optional)
-- Ollama (local, free) or a Groq / Gemini / Claude API key
-
-### 1. Clone & Configure
 
 ```bash
-git clone https://github.com/rajmodi262/agentforge-v2.git
-cd agentforge-v2
-cp .env.example .env
-# Edit .env: AI_PROVIDER=ollama (free) or add an API key
+cd AgentForge_V2/frontend && npm install && npm run dev  # open http://localhost:5180/phantom and register
 ```
 
-### 2. Run with Docker (Recommended)
+On first start the backend fills an empty database from `backend/seed/phantom_seed.json.gz`: 395 projects, 2,096 article records (metadata only, no article bodies), 1,487 verified mentions and 1,303 evidence quotes. Turn it off with `PHANTOM_AUTO_SEED=false`.
 
-```bash
-docker-compose up --build
-```
+### Collect fresh data
 
-### 3. Run Locally (Development)
-
-```bash
-# Backend
-cd backend
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-
-# Frontend (new terminal)
-cd frontend
-npm install
-npm run dev
-```
-
-### 4. Access
+Install [Ollama](https://ollama.com) and pull `qwen2.5:7b`, then press **Hunt** on the overview, or use **Investigate** on any project. An optional free [Firecrawl](https://firecrawl.dev) key (`FIRECRAWL_API_KEY` in `backend/.env`) lets the scouts read pages a plain fetch can't, still respecting robots.txt, with a hard credit cap per run. Phantom Hunter refuses to extract in mock mode, so demo output never becomes evidence.
 
 | Service | URL |
-|---------|-----|
-| 🌐 Frontend | http://localhost:5180 |
-| ⚡ Backend API | http://localhost:8000 |
-| 📚 API Docs | http://localhost:8000/docs |
+|---|---|
+| 🌐 App | http://localhost:5180/phantom |
+| ⚡ API | http://localhost:8000 |
+| 📚 API docs | http://localhost:8000/docs |
 
 ---
 
-## 🛠 Tech Stack
+## 🛠 Tech stack
 
-<table>
-<tr>
-<td><b>Layer</b></td>
-<td><b>Technology</b></td>
-<td><b>Purpose</b></td>
-</tr>
-<tr>
-<td>🧠 AI Engine</td>
-<td>LangGraph, Claude API, Gemini API</td>
-<td>Agent orchestration, multi-step LLM reasoning</td>
-</tr>
-<tr>
-<td>⚡ Backend</td>
-<td>FastAPI, SQLAlchemy, Pydantic</td>
-<td>Async REST API, ORM, schema validation</td>
-</tr>
-<tr>
-<td>🔄 Real-Time</td>
-<td>WebSocket, Redis</td>
-<td>Live agent streaming, event broadcasting</td>
-</tr>
-<tr>
-<td>🎨 Frontend</td>
-<td>React 18, Vite, GSAP</td>
-<td>Interactive dashboard, 3D animations</td>
-</tr>
-<tr>
-<td>🗄️ Database</td>
-<td>PostgreSQL, SQLite (dev)</td>
-<td>Persistent storage, session management</td>
-</tr>
-<tr>
-<td>🐳 DevOps</td>
-<td>Docker Compose, GitHub Actions</td>
-<td>Containerized deployment, CI/CD</td>
-</tr>
-</table>
+| Layer | Tools |
+|---|---|
+| **Agents** | LangGraph state machines, Pydantic structured output, a local LLM via Ollama, with Groq / Gemini / Claude as alternative providers |
+| **Data** | httpx scouts, trafilatura, Firecrawl, rapidfuzz entity resolution, an offline gazetteer |
+| **Backend** | FastAPI, SQLAlchemy, SQLite / PostgreSQL, WebSockets, JWT auth, rate limiting |
+| **Frontend** | React 19, TypeScript, Three.js / react-three-fiber, framer-motion, Vite |
+| **Analytics** | openpyxl, matplotlib, SQL, Power BI (PBIP + DAX) |
+| **Quality** | pytest (199), CodeQL, Dependabot, Playwright |
 
 ---
 
-## 📂 Project Structure
+## 📂 Where things are
 
 ```
-agentforge/
-├── backend/
-│   ├── app/
-│   │   ├── agents/              # 7 AI agents + orchestrator
-│   │   │   ├── base_agent.py    # Multi-step reasoning engine
-│   │   │   ├── orchestrator.py  # LangGraph workflow builder
-│   │   │   ├── board_meeting.py # Multi-round debate engine
-│   │   │   ├── ceo_agent.py
-│   │   │   ├── research_agent.py
-│   │   │   ├── marketing_agent.py
-│   │   │   ├── developer_agent.py
-│   │   │   ├── finance_agent.py
-│   │   │   ├── analytics_agent.py
-│   │   │   ├── operations_agent.py
-│   │   │   └── report_compiler.py
-│   │   ├── api/                 # REST endpoints
-│   │   ├── models/              # Pydantic schemas + DB models
-│   │   ├── services/            # Claude/Gemini, WebSocket, RAG
-│   │   └── main.py              # FastAPI application entry
-│   ├── tests/                   # Pytest test suite
-│   └── requirements.txt
-├── frontend/                    # React + Vite SPA
-├── docker-compose.yml
-└── README.md
+backend/app/phantom/
+  sources.py     scouts: feeds, polite fetching, Firecrawl fallback
+  extract.py     LLM extraction + deterministic evidence miner
+  verify.py      the fact-checker: no LLM
+  power.py       power forensics: grid position, supplier, cooling, ecosystem
+  resolve.py     entity resolution + the subject check
+  merge.py       human merge-review queue
+  score.py       log-odds reality score, weakest assumption, who to call
+  backtest.py    four-cutoff calibration backtest, re-fitting, cross-validation
+  investigate.py the Investigator agent
+  importer.py    score any CSV project list
+  track.py       developer track records
+  pipeline.py    the LangGraph hunt
+frontend/src/pages/Phantom*.tsx   the control room
+analytics/                        Excel, Power BI, SQL, charts
+PHANTOM_HUNTER.md                 design write-up and interview Q&A
+PHANTOM_EVAL.md                   every evaluation, regenerated from data
 ```
 
 ---
 
-## 🏛️ Board Meeting — The Secret Sauce
+## 🤖 The AgentForge engine underneath
 
-What makes AgentForge unique is the **Board Meeting Debate Engine**. After all 7 agents complete their analysis, they enter a structured 4-round debate:
-
-| Round | Matchup | Topic |
-|-------|---------|-------|
-| 1 | Finance → CEO | Revenue model & unit economics viability |
-| 2 | Developer → Marketing | Go-to-market timeline vs. technical feasibility |
-| 3 | Research → Finance | TAM/SAM accuracy & market sizing assumptions |
-| 4 | Operations → Developer | Infrastructure scaling readiness |
-
-A **Board Secretary** then synthesizes all debates into a consensus score, identifies key risks, and produces the final strategic recommendation.
-
----
-
-## 📊 What You Get
-
-When you submit a business idea, AgentForge generates a comprehensive blueprint including:
-
-- ✅ **Vision & Problem Statement** — Clear articulation of the opportunity
-- ✅ **Market Research** — TAM/SAM/SOM analysis with competitor mapping
-- ✅ **Go-to-Market Strategy** — Pricing, channels, customer acquisition cost
-- ✅ **Technical Architecture** — Full stack recommendation with MVP roadmap
-- ✅ **Financial Projections** — 3-year revenue model with break-even analysis
-- ✅ **KPI Dashboard** — Key metrics and success criteria
-- ✅ **Operations Plan** — Hiring roadmap, launch timeline, risk mitigation
-- ✅ **Board Consensus** — Cross-validated insights from agent debates
-
----
-
-## 🔧 Environment Variables
-
-```env
-# AI Provider — set ONE for real output (Groq's free tier is recommended)
-GROQ_API_KEY=gsk_...               # Groq / Llama 3.3 — free tier, fast
-GEMINI_API_KEY=AIza...             # Gemini Flash — free tier (alternative)
-ANTHROPIC_API_KEY=sk-ant-...       # Claude (alternative)
-AI_PROVIDER=auto                   # auto = first key found
-
-# Database (omit for SQLite in dev)
-DATABASE_URL=postgresql://user:pass@localhost/agentforge
-
-# Security (auto-generated in dev if left default; required in production)
-JWT_SECRET_KEY=your-secret-key
-ENVIRONMENT=development            # production enforces real secret + API key
-
-# Mock mode — defaults to false. If left false with NO key, agents return
-# simulated data shown behind a "DEMO DATA" badge (never as real analysis).
-MOCK_MODE=false
-```
-
-See [`.env.example`](.env.example) for the full list.
-
----
-
-## 📐 Evaluation
-
-The whole point of a multi-agent system is the claim that it beats a single prompt. AgentForge ships a harness that **measures** that instead of asserting it:
-
-```bash
-cd backend
-python -m eval.run            # all sample ideas → EVAL_RESULTS.md
-python -m eval.run --ideas 3  # quick run on the first 3
-```
-
-- **Baseline:** one strong-prompt LLM call (senior-analyst persona, same sections) — a fair, not strawman, baseline.
-- **Pipeline:** the real 7 agents + Board Meeting debate + Chief Synthesizer, via the production agent classes (no DB needed).
-- **Judge:** a separate blind LLM scores both anonymized blueprints on specificity, internal consistency, actionability, risk depth, and realism. A/B order is alternated per idea to cancel position bias.
-- **Output:** `EVAL_RESULTS.md` (headline delta, per-dimension table, per-idea winners, token cost) plus raw artifacts in `backend/eval/results/`.
-
-> Requires a working AI key — the harness refuses to run on mock data so the numbers are never fake.
+Phantom Hunter is built on **AgentForge**, a multi-agent engine where seven specialist agents (CEO, Research, Marketing, Developer, Finance, Analytics, Operations) turn a startup idea into a blueprint, debate it in a Board Meeting, and hand it to a Chief Synthesizer. The engine provides the agent framework, multi-provider LLM service, structured output with retries, WebSocket streaming, an MCP server and the 3D UI. Its own evaluation harness ([`backend/eval/`](backend/eval)) measured the seven-agent pipeline against a single strong prompt, and it reported a tie. That result is what pushed the project towards real data, where agents can do what a single prompt cannot.
 
 ---
 
 ## ⚠️ Limitations
 
-In the spirit of honesty (this is a portfolio piece, not a commercial product):
-
-- **Output quality is only as good as the model.** On the free Groq/Gemini tiers, the blueprint is a solid structured draft, not investment-grade analysis.
-- **Multi-agent value is measured, not assumed.** A real eval harness ([`backend/eval/`](backend/eval)) pits the 7-agent pipeline against a strong single-prompt baseline, scored by a blind LLM judge — run `python -m eval.run` with a working key to (re)generate `EVAL_RESULTS.md`. See [Evaluation](#-evaluation).
-- **Tools are partly placeholder.** Web search returns labelled placeholders unless a Brave key is set; agents are instructed not to cite placeholders as fact.
-- **Single-tenant, demo-scale.** No billing, quotas, or production hardening beyond auth + rate limiting.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- **The score is a measuring tool, not a forecaster.** It cannot yet predict which pre-construction projects will be built (see [The honest part](#-the-honest-part)).
+- **Public news only.** It names a power supplier for just 14 of 395 projects. Filings are the next source.
+- **India and Malaysia have data.** Scouts for Singapore and Indonesia are built, but their data has not been collected yet.
+- **56% of projects rest on a single source.** Announced capacity is an upper bound; a few duplicates survive by design for human review.
+- **The evidence audit is AI-labelled** until two people regrade it. The samples are in the repo.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
-
----
+MIT. See [LICENSE](LICENSE).
 
 <div align="center">
 
-**Built with ❤️ by [Raj Modi](https://github.com/rajmodi262)**
+**Built by [Raj Modi](https://github.com/rajmodi262)**
 
-*If you found this useful, please ⭐ the repo!*
+*If this changed how you read a data-centre announcement, leave a ⭐*
 
 </div>
