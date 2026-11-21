@@ -51,7 +51,7 @@ The verifier proves a quote *exists* and *fits its stage*; it cannot prove the s
 
 Round 1 drove four rule fixes (network "interconnected" ≠ power; future tense never proves LIVE; upgrade an under-labelled event when its own quote states a higher stage; "TM Nxera" = Telekom Malaysia). Round 2 is a **fresh sample** that excluded every round-1 item, so its number is not inflated by tuning. Its findings ("seeks a loan", "will acquire land", "secured 264 acres", "solar deal with TNB") were then fixed and turned into regression tests. Most remaining errors are *conservative* — the system under-states a project's stage more often than it over-states it, the safe direction for a sales tool.
 
-Labels are a first pass by an AI assistant (Claude) and should be confirmed by the team: `PHANTOM_AUDIT_SAMPLE_round1.csv`, `PHANTOM_AUDIT_SAMPLE_round2.csv`. The weakness still visible: a real quote about a *different* project in the same article (1–2 per 40).
+Labels are a first pass by an AI assistant and should be confirmed by the team: `PHANTOM_AUDIT_SAMPLE_round1.csv`, `PHANTOM_AUDIT_SAMPLE_round2.csv`. The weakness still visible: a real quote about a *different* project in the same article (1–2 per 40).
 
 ## 4. Coverage-agent ablation — what the agentic loop adds
 
