@@ -170,7 +170,7 @@ def audit_section() -> list:
         "(\"seeks a loan\", \"will acquire land\", \"secured 264 acres\", \"solar deal with TNB\") were then fixed and "
         "turned into regression tests. Most remaining errors are *conservative* — the system under-states a project's "
         "stage more often than it over-states it, the safe direction for a sales tool.", "",
-        "Labels are a first pass by an AI assistant (Claude) and should be confirmed by the team: "
+        "Labels are a first pass by an AI assistant and should be confirmed by the team: "
         "`PHANTOM_AUDIT_SAMPLE_round1.csv`, `PHANTOM_AUDIT_SAMPLE_round2.csv`. "
         "The weakness still visible: a real quote about a *different* project in the same article (1–2 per 40)."]
 
