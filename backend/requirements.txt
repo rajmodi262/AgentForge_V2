@@ -10,7 +10,7 @@ asyncpg==0.30.0
 
 # LangGraph (Agentic Orchestration)
 langgraph>=1.1.0
-langchain-core>=1.3.0
+langchain-core>=1.8.2
 
 # Phantom Hunter — scouting, fuzzy matching, analytics exports
 feedparser==6.0.11
